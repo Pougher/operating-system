@@ -1,9 +1,13 @@
 #include "paging.h"
 
+PagetableMetadata pt_meta;
+
 void paging_init(PhysicalMemoryManager *pmm, Pagetable *master) {
     // find the physical address of where to put the pagetable data
-    const uint8_t *pagetable_physical = pmm->memory_base + pmm->mb_size -
+    uint8_t *pagetable_physical = pmm->memory_base + pmm->mb_size -
         (sizeof(Pagetable) * PAGE_TABLE_COUNT);
+
+    pt_meta.physical_address = pagetable_physical;
 
     // populate the master pagetable with the physical addresses that are going
     // to be mapped virtually
@@ -21,7 +25,7 @@ void paging_init(PhysicalMemoryManager *pmm, Pagetable *master) {
 
     // get cr3 which holds the location of the page directory and write the
     // constructed pagetable to its address + the virtual offset of the kernel
-    // + 784 * 4 (0xC4000000 virtual offset)
+    // + 769 * 4 (0xC0400000 virtual offset)
     union {
         uint32_t value;
         uint32_t *ptr;
@@ -30,9 +34,28 @@ void paging_init(PhysicalMemoryManager *pmm, Pagetable *master) {
     cr3_cast.value = pmm_read_cr3() + KERNEL_VIRTUAL_OFFSET;
     uint32_t *cr3 = cr3_cast.ptr;
 
-    cr3[784] = ((uint32_t)(master) -  KERNEL_VIRTUAL_OFFSET) | 0x03;
+    pt_meta.cr3 = cr3;
 
-    // test write to that area
-    *((volatile uint8_t*)0xC43FFFFF) = 0xaa;
-    print_u32(*(volatile uint8_t*)0xC4000000);
+    cr3[769] = ((uint32_t)(master) -  KERNEL_VIRTUAL_OFFSET) | 0x03;
+
+    // write all zeros to the master pagetable
+    volatile uint8_t *mpt = (uint8_t*)PT_VIRTUAL_OFFSET;
+    for (size_t i = 0; i < 0x40000; i++) {
+        mpt[i] = 0;
+    }
+}
+
+Pagetable *paging_get_table(uint16_t index) {
+    return (Pagetable*) (PT_VIRTUAL_OFFSET + (index << 12));
+}
+
+void paging_vmap(uint32_t virtual_address, Pagetable *table) {
+    uint32_t cr3_offset = virtual_address >> 22;
+    uint8_t *pagetable_physical = (uint8_t*)
+        ((uint32_t)pt_meta.physical_address +
+         ((uint32_t)table - PT_VIRTUAL_OFFSET));
+    print_u32((uint32_t)pagetable_physical);
+
+    // write the pagetable into the correct cr3 index
+    pt_meta.cr3[cr3_offset] = ((uint32_t)(pagetable_physical) | 0x03);
 }

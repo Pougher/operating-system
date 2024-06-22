@@ -20,6 +20,8 @@
 
 #define PAGE_TABLE_COUNT    1024
 
+#define PT_VIRTUAL_OFFSET   0xC0400000
+
 typedef struct {
     unsigned int present : 1;
     unsigned int rw      : 1;
@@ -34,8 +36,24 @@ typedef struct {
     Page pages[1024] __attribute__((aligned(4096)));
 } Pagetable;
 
+typedef struct {
+    // the physical address of the master pagetable
+    uint8_t *physical_address;
+
+    // the virtual address of the page directory
+    uint32_t *cr3;
+} PagetableMetadata;
+
 // the pagetable pointer passed is responsible for providing memory space for
 // all of the other pagetables in RAM
 void paging_init(PhysicalMemoryManager*, Pagetable*);
+
+// returns the address in virtual memory of the specified pagetable index
+Pagetable *paging_get_table(uint16_t);
+
+// virtually maps a pagetable to a specific virtual address, the page table
+// itself must be located in the space allocated for the master pagetable, and
+// should be offset by the kernel's virtual address
+void paging_vmap(uint32_t, Pagetable*);
 
 #endif

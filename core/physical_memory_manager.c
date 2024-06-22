@@ -1,4 +1,5 @@
 #include "physical_memory_manager.h"
+#include "paging.h"
 
 PhysicalMemoryManager pmm;
 
@@ -46,24 +47,42 @@ void pmm_init(multiboot_info_t *mbi) {
         klock();
     }
 
+    if ((uint32_t)pmm.memory_base % 0x400000 != 0) {
+        pmm.mb_size -= 0x400000 - ((uint32_t)pmm.memory_base % 0x400000);
+        pmm.memory_base += 0x400000 - ((uint32_t)pmm.memory_base % 0x400000);
+    }
+
+    // round the total memory area to the size of a pagetable (4MiB)
+    if (pmm.mb_size % 0x400000 != 0) {
+        pmm.mb_size -= pmm.mb_size % 0x400000;
+    }
+
     // check if there is enough space for the pagetable data (pagetable data
     // takes up ~4MiB)
-    if (pmm.mb_size < 0x400000) {
+    if (pmm.mb_size < 0xF00000) {
         printf("\x8c""FATAL: Not enough space for pagetable data in RAM");
         klock();
     }
+}
 
-    // we have now successfully got an available segment of memory that is free
-    // and can be virtually mapped
-    printf("Found usable memory segment at ");
-    print_u32((uint32_t)pmm.memory_base);
-    printf(" with size ");
-    print_u32((uint32_t)pmm.mb_size);
-    printf("\n");
+void pmm_allocate_bitmaps() {
+    // work out the bitmap table page index
+    uint32_t index = (pmm.mb_size - (sizeof(Pagetable) * PAGE_TABLE_COUNT
+        + 0x400000)) >> 22;
+    uint32_t addr = (index << 22) + (uint32_t)pmm.memory_base;
 
-    printf("CR3[physical] = ");
-    print_u32(pmm_read_cr3());
-    printf("\n");
+    Pagetable *bitmap_table = paging_get_table((uint16_t)index);
+    for (size_t i = 0; i < 1024; i++) {
+        bitmap_table->pages[i].frame = addr >> 12;
+        bitmap_table->pages[i].present = PAGE_PRESENT;
+        bitmap_table->pages[i].rw = PAGE_READWRITE;
+
+        addr += PAGE_SIZE;
+    }
+
+    paging_vmap(PMM_BITMAP_ADDRESS, bitmap_table);
+
+    // get the top of the physical memory
 }
 
 uint32_t pmm_read_cr3() {
