@@ -1,0 +1,92 @@
+#include "../core/format.h"
+#include "../core/gdt.h"
+#include "../core/multiboot.h"
+#include "../core/physical_memory_manager.h"
+#include "../core/paging.h"
+
+#include "../drivers/vga.h"
+
+void kernel_init(Pagetable *pagetable, multiboot_info_t *mbi) {
+    // integral functions to the operation of the system
+    gdt_install_gdt();
+
+    // functions for the operation of the kernel
+    format_init();
+    driver_vga_init();
+
+    // clear the screen and set the background colour to grey
+    driver_vga_clear(0x8);
+    printf("\x98");
+
+    // initialize memory managers
+    pmm_init(mbi);
+    paging_init(&pmm, pagetable);
+
+    print_u32(sizeof(Pagetable));
+}
+
+void kernel_main(unsigned int boot_page_2, unsigned int ebx) {
+    multiboot_info_t *mbinfo = (multiboot_info_t*)ebx;
+    Pagetable *pagetable = (Pagetable*)boot_page_2;
+
+    kernel_init(pagetable, mbinfo);
+
+    //printf("\x98\x87// program to output 'Hello, world!'\n");
+    //printf("\x8e""int\x8a" " main\x8f() {\n");
+    //printf("\x8e    char\x8f *\x83message\x8f = \x8a\"Hello, world!\"\x8f;\n\n");
+    //printf("\x8a    printf\x8f(\x8a\"%s\"\x8f,\x83 message\x8f);\n");
+    //printf("    \x8creturn\x8d 0\x8f;\n}");
+
+/*
+printf("    @@@                 @@@@     \n");
+printf("   @++#@@@            @@+##@     \n");
+printf("   @+#,,++@@@     @@@@++,,,#@    \n");
+printf("   @#,,,+++++@@@@@+++++,,,,#@    \n");
+printf("   @#,,,,++++++++++++++#,,,+@    \n");
+printf("   @+,,,,,++++++++++++++,,#,@    \n");
+printf("   @+,,,#+++++++++++++++###,@    \n");
+printf("    +,,#+++++++++++++++++++,     \n");
+printf("    @++++++@@@@++++++@@@++++     \n");
+printf("     @++++++@@@@++++@@@++++++    \n");
+printf("    @+++++@@,,,,++++,,,,,@@++    \n");
+printf("    +++++@,,,,,,,,,,,,,,,,,@++   \n");
+printf("    ++++@,,,,,,,,,,,,,,,,,,,@+   \n");
+printf("   ++++@,,,,,,,,,,,,,,,   ,,,@+  \n");
+printf("  +++++@,,,,   ,,,,,@@,   ,,,@++ \n");
+printf("  +++++@,,,,   ,@@...@@   ,,,@++ \n");
+printf("  +++++@,,,,   @@@@.@@@@++,,,@@+ \n");
+printf("  +@+++@,,,,+@@@.@.@.@.@@@,,@@@+ \n");
+printf("  #@@+@@@,,,@@@@@.@@@.@@@@@@@@++ \n");
+printf("   @@@@@@@@@@@@@@@@@@@@@@@@@@@#  \n");
+printf("    @@@@@@@@@@@@@@@@@@@@@@@@@@   \n");
+printf("    @@@@@@@@@@@@@@@@@@@@@@@@@@   \n");
+printf("     @@@@@@@@@@@@@@@@@@@@@@@@    \n");
+printf("      @@@@@@@@@@@@@@@@@@@@@@     \n");
+printf("       ++++@@@@@@@@@@@@@@        \n");
+printf("        +++++@@@@@@@@@@@  +++    \n");
+printf("        ++++++++@@@@@@+++++++    \n");
+printf("       ++++#+++++@@@+++++#++#    \n");
+printf("       #+##++++++++++++##+++#    \n");
+printf("       #+++    ++++++++  +++#    \n");
+printf("       #++++++ +++@@@++::::::    \n");
+printf("       ##++++++ +   :::::::::#   \n");
+printf("      # ##++++++  :::::::::::##  \n");
+printf("      ##  ##++++  :::::::::::##  \n");
+printf("    , ####  ##++  ::::,,:::::+#  \n");
+printf("   ,, ###++#  , + ::::,,:::::++# \n");
+printf("  #,, ###+++#  + :::::::::::+++# \n");
+printf("  +#, ##+++  ::: :::::::::::++## \n");
+printf(" +++# ###+++  :: :::::::::::++#  \n");
+printf(" +,,, ,#+++++  : :::::      ++#  \n");
+printf(" ,,,, ,+++++++        +, ++++#,  \n");
+printf(" ,,+## ,,++++,,,@ +@@+  ,@,+##   \n");
+printf("  ++##,  ,,,+,@,,, ++, @,,,##,   \n");
+printf("  +++,,,#  ,,,,@@, ,,, ,@@,,,    \n");
+printf("   ,,,,,##    ,@@       @@,      \n");
+printf("    ,,,#+                        \n");
+printf("      +++                        \n");
+printf("                                 \n\n");
+printf("Hello from a Higher-Half Kernel!\n");*/
+    while(1){
+    }
+}

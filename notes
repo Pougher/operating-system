@@ -1,0 +1,12 @@
+Resources:
+    - https://github.com/cstack/osdev
+
+Other stuff:
+    - kernel lives at 0xC0100000
+    - gdt allocates kernel space from 0xC00FFFFF (0xC0FF offset) to
+      0xCFFFFFFF
+
+What I want to do:
+    - Allocate pages at address 0xD0000000 for memory management (malloc, calloc, etc.) using virtual
+    adddressing
+    - Allocate pages from 0xB0000000 - 0xC0000000 for applications

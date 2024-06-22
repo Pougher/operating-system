@@ -1,0 +1,6 @@
+#ifndef _KERNEL_KINFO_H
+#define _KERNEL_KINFO_H
+
+#define KERNEL_VIRTUAL_OFFSET 0xC0000000LL
+
+#endif
