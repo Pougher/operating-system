@@ -54,7 +54,6 @@ void paging_vmap(uint32_t virtual_address, Pagetable *table) {
     uint8_t *pagetable_physical = (uint8_t*)
         ((uint32_t)pt_meta.physical_address +
          ((uint32_t)table - PT_VIRTUAL_OFFSET));
-    print_u32((uint32_t)pagetable_physical);
 
     // write the pagetable into the correct cr3 index
     pt_meta.cr3[cr3_offset] = ((uint32_t)(pagetable_physical) | 0x03);

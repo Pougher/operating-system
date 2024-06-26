@@ -19,10 +19,10 @@ void kernel_init(Pagetable *pagetable, multiboot_info_t *mbi) {
     printf("\x98");
 
     // initialize memory managers
-    pmm_init(mbi);
+    pmm_find_usable_memory(mbi);
     paging_init(&pmm, pagetable);
 
-    pmm_allocate_bitmaps();
+    pmm_init();
 }
 
 void kernel_main(unsigned int boot_page_2, unsigned int ebx) {
@@ -37,7 +37,7 @@ void kernel_main(unsigned int boot_page_2, unsigned int ebx) {
     //printf("\x8a    printf\x8f(\x8a\"%s\"\x8f,\x83 message\x8f);\n");
     //printf("    \x8creturn\x8d 0\x8f;\n}");
 
-
+/*
 printf("    @@@                 @@@@     \n");
 printf("   @++#@@@            @@+##@     \n");
 printf("   @+#,,++@@@     @@@@++,,,#@    \n");
@@ -86,7 +86,7 @@ printf("   ,,,,,##    ,@@       @@,      \n");
 printf("    ,,,#+                        \n");
 printf("      +++                        \n");
 printf("                                 \n\n");
-printf("Hello from a Higher-Half Kernel!\n");
+printf("Hello from a Higher-Half Kernel!\n");*/
     while(1){
     }
 }

@@ -5,7 +5,8 @@ QEMU = qemu-system-x86_64
 
 CC = i686-elf-gcc
 GDB = i686-elf-gdb
-CFLAGS = -g -O3 -Wall -pedantic -Wextra -nostdlib
+CFLAGS = -g -O3 -Wall -pedantic -Wextra -nostdlib -Wno-stringop-overflow
+
 
 os.bin: ${OBJ} boot.o gdt.o util.o
 	${CC} -ffreestanding -nostdlib -T linker.ld -o $@ $^ -lgcc

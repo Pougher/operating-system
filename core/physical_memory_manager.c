@@ -3,7 +3,12 @@
 
 PhysicalMemoryManager pmm;
 
-void pmm_init(multiboot_info_t *mbi) {
+void pmm_init() {
+    pmm_allocate_bitmap();
+    pmm_init_bitmap();
+}
+
+void pmm_find_usable_memory(multiboot_info_t *mbi) {
     pmm.memory_base = 0;
     pmm.mb_size = 0;
 
@@ -15,7 +20,7 @@ void pmm_init(multiboot_info_t *mbi) {
     for (uint32_t i = 0; i < mbi->mmap_length;
         i += sizeof(multiboot_memory_map_t)) {
         multiboot_memory_map_t *mmt = (multiboot_memory_map_t*)
-            (mbi->mmap_addr + i + KERNEL_VIRTUAL_OFFSET);
+            (mbi->mmap_addr + i + (uint32_t)KERNEL_VIRTUAL_OFFSET);
 
         if (mmt->type == MULTIBOOT_MEMORY_AVAILABLE) {
             // the memory is usable
@@ -65,7 +70,7 @@ void pmm_init(multiboot_info_t *mbi) {
     }
 }
 
-void pmm_allocate_bitmaps() {
+void pmm_allocate_bitmap() {
     // work out the bitmap table page index
     uint32_t index = (pmm.mb_size - (sizeof(Pagetable) * PAGE_TABLE_COUNT
         + 0x400000)) >> 22;
@@ -82,7 +87,79 @@ void pmm_allocate_bitmaps() {
 
     paging_vmap(PMM_BITMAP_ADDRESS, bitmap_table);
 
-    // get the top of the physical memory
+    // set the free pages pointer to this new bitmap address
+    pmm.free_pages = (uint32_t*) PMM_BITMAP_ADDRESS;
+}
+
+void pmm_init_bitmap() {
+    // 4GiB / 4096KiB = 1MiB of pages, each page is represented by 1 bit, so
+    // each byte is 8 pages. 1MiB / 8 = 131072 bytes, 32 bits per index, so
+    // 131072 / 4 = 32768
+    memset(pmm.free_pages, 0xff, PMM_BITMAP_SIZE * 4);
+
+    const uint32_t page = 4096;
+    pmm_mark_region_free((void*)page, page * 65);
+
+    for (size_t i = 0; i < 20; i++) {
+        print_u32(pmm.free_pages[i]);
+        printf("\n");
+    }
+}
+
+void *pmm_request_page() {
+    // first, search through the array looking for an index that isn't all 1s
+    // (has a free slot)
+    for (size_t i = 0; i < PMM_BITMAP_SIZE; i++) {
+        if (pmm.free_pages[i] != 0xffffffff) {
+            uint8_t zero_index = 0;
+            uint32_t value = pmm.free_pages[i];
+
+            // get the index of the zero bit
+            for (zero_index = 0; zero_index < 32; zero_index++) {
+                if (((value >> zero_index) & 1) == 0) {
+                    break;
+                }
+            }
+
+            pmm.free_pages[i] |= (1 << zero_index);
+        }
+    }
+
+    // TODO
+    return NULL;
+}
+
+void pmm_mark_region_free(void *dst, size_t length) {
+    uint32_t page_number = ((uint32_t)dst) >> 12;
+    uint32_t page_end = (((uint32_t)length) >> 12) + page_number;
+
+    // the start and end index of the page number in the bitmap
+    uint16_t start_index = page_number / 32;
+    uint16_t end_index = page_end / 32;
+
+    // the start and bit offset into the byte at the start_index and the byte
+    // at the end_index
+    uint8_t start_bit_offset = page_number % 32;
+    uint8_t end_bit_offset = page_end % 32;
+
+    if (start_index == end_index) {
+        pmm.free_pages[start_index] = (UINT32_MAX >> (32 - start_bit_offset)) |
+            (UINT32_MAX << end_bit_offset);
+        return;
+    }
+
+    if (start_bit_offset) {
+        pmm.free_pages[start_index] = UINT32_MAX >> (32 - start_bit_offset);
+        start_index++;
+    }
+
+    if (end_bit_offset) {
+        pmm.free_pages[end_index] = 0xffffffff << end_bit_offset;
+    }
+
+    for (size_t i = start_index; i < end_index; i++) {
+        pmm.free_pages[i] = 0x00;
+    }
 }
 
 uint32_t pmm_read_cr3() {
