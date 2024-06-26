@@ -78,7 +78,7 @@ void pmm_allocate_bitmap() {
 
     Pagetable *bitmap_table = paging_get_table((uint16_t)index);
     for (size_t i = 0; i < 1024; i++) {
-        bitmap_table->pages[i].frame = addr >> 12;
+        bitmap_table->pages[i].frame = addr >> PAGE_SHIFT;
         bitmap_table->pages[i].present = PAGE_PRESENT;
         bitmap_table->pages[i].rw = PAGE_READWRITE;
 
@@ -97,13 +97,16 @@ void pmm_init_bitmap() {
     // 131072 / 4 = 32768
     memset(pmm.free_pages, 0xff, PMM_BITMAP_SIZE * 4);
 
-    const uint32_t page = 4096;
-    pmm_mark_region_free((void*)page, page * 65);
+    // mark the memory base region as free for use
+    pmm_mark_region_free(pmm.memory_base, pmm.mb_size);
 
-    for (size_t i = 0; i < 20; i++) {
-        print_u32(pmm.free_pages[i]);
-        printf("\n");
-    }
+    for (size_t i = 0; i < 42; i++) pmm_request_page();
+    void *pg = pmm_request_page();
+    print_u32((uint32_t)pg);
+    print_u32((uint32_t)pmm_request_page());
+    print_u32((uint32_t)pmm_request_page());
+    pmm_free_page(pg);
+    print_u32((uint32_t)pmm_request_page());
 }
 
 void *pmm_request_page() {
@@ -122,20 +125,32 @@ void *pmm_request_page() {
             }
 
             pmm.free_pages[i] |= (1 << zero_index);
+
+            uint32_t addr = (zero_index * PAGE_SIZE) + (i * PAGE_SIZE * 32);
+            return (void*)addr;
         }
     }
 
-    // TODO
+    // memory is completely full, so return NULL
     return NULL;
 }
 
+void pmm_free_page(void *page) {
+    // the page number
+    uint32_t pg = (uint32_t)page >> PAGE_SHIFT;
+
+    // clears the page bit (sets it to 0) to indicate a free page
+    pmm.free_pages[pg >> 5] =
+        pmm.free_pages[pg >> 5] & ~((uint32_t)1 << (pg % 32));
+}
+
 void pmm_mark_region_free(void *dst, size_t length) {
-    uint32_t page_number = ((uint32_t)dst) >> 12;
-    uint32_t page_end = (((uint32_t)length) >> 12) + page_number;
+    uint32_t page_number = ((uint32_t)dst) >> PAGE_SHIFT;
+    uint32_t page_end = (((uint32_t)length) >> PAGE_SHIFT) + page_number;
 
     // the start and end index of the page number in the bitmap
-    uint16_t start_index = page_number / 32;
-    uint16_t end_index = page_end / 32;
+    uint16_t start_index = page_number >> 5;
+    uint16_t end_index = page_end >> 5;
 
     // the start and bit offset into the byte at the start_index and the byte
     // at the end_index

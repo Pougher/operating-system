@@ -52,6 +52,9 @@ void pmm_mark_region_free(void*, size_t);
 // addresses are found, then a NULL pointer is returned
 void *pmm_request_page();
 
+// marks the physical address of a page in RAM as free
+void pmm_free_page(void*);
+
 // reads the cr3 paging register into a u32
 uint32_t pmm_read_cr3();
 

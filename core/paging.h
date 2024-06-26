@@ -17,6 +17,7 @@
 #define PAGE_SIZE_4KB       0
 #define PAGE_SIZE_4MB       1
 #define PAGE_SIZE           4096
+#define PAGE_SHIFT          12
 
 #define PAGE_TABLE_COUNT    1024
 
