@@ -35,7 +35,6 @@ void paging_init(PhysicalMemoryManager *pmm, Pagetable *master) {
     uint32_t *cr3 = cr3_cast.ptr;
 
     pt_meta.cr3 = cr3;
-
     cr3[769] = ((uint32_t)(master) -  KERNEL_VIRTUAL_OFFSET) | 0x03;
 
     // write all zeros to the master pagetable
@@ -57,4 +56,11 @@ void paging_vmap(uint32_t virtual_address, Pagetable *table) {
 
     // write the pagetable into the correct cr3 index
     pt_meta.cr3[cr3_offset] = ((uint32_t)(pagetable_physical) | 0x03);
+}
+
+void paging_invalidate_tlb(void *page) {
+    asm volatile (
+        "invlpg (%0)" :
+        : "r"(page) : "memory"
+    );
 }

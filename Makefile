@@ -25,7 +25,7 @@ util.o: core/util.s
 	nasm -felf32 $< -o $@
 
 run:
-	${QEMU} -cdrom os.iso
+	${QEMU} -m 64M -cdrom os.iso -monitor stdio
 
 %.o: %.c ${HEADERS}
 	${CC} ${CFLAGS} -ffreestanding -c $< -o $@

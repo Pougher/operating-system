@@ -72,11 +72,14 @@ void pmm_find_usable_memory(multiboot_info_t *mbi) {
 
 void pmm_allocate_bitmap() {
     // work out the bitmap table page index
-    uint32_t index = (pmm.mb_size - (sizeof(Pagetable) * PAGE_TABLE_COUNT
+    uint32_t physical = (pmm.mb_size - (sizeof(Pagetable) * PAGE_TABLE_COUNT
         + 0x400000)) >> 22;
-    uint32_t addr = (index << 22) + (uint32_t)pmm.memory_base;
+    uint32_t addr = (physical << 22) + (uint32_t)pmm.memory_base;
 
-    Pagetable *bitmap_table = paging_get_table((uint16_t)index);
+    Pagetable *bitmap_table = paging_get_table(
+        (uint16_t)(PMM_BITMAP_ADDRESS >> 22)
+    );
+
     for (size_t i = 0; i < 1024; i++) {
         bitmap_table->pages[i].frame = addr >> PAGE_SHIFT;
         bitmap_table->pages[i].present = PAGE_PRESENT;
@@ -99,14 +102,6 @@ void pmm_init_bitmap() {
 
     // mark the memory base region as free for use
     pmm_mark_region_free(pmm.memory_base, pmm.mb_size);
-
-    for (size_t i = 0; i < 42; i++) pmm_request_page();
-    void *pg = pmm_request_page();
-    print_u32((uint32_t)pg);
-    print_u32((uint32_t)pmm_request_page());
-    print_u32((uint32_t)pmm_request_page());
-    pmm_free_page(pg);
-    print_u32((uint32_t)pmm_request_page());
 }
 
 void *pmm_request_page() {

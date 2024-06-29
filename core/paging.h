@@ -45,6 +45,12 @@ typedef struct {
     uint32_t *cr3;
 } PagetableMetadata;
 
+/*
+ * Each index into the pagetable RAM represents the virtual address that that
+ * pagetable is placed at, for example pagetable index 768 represents virtual
+ * address 0xC0000000
+*/
+
 // the pagetable pointer passed is responsible for providing memory space for
 // all of the other pagetables in RAM
 void paging_init(PhysicalMemoryManager*, Pagetable*);
@@ -56,5 +62,8 @@ Pagetable *paging_get_table(uint16_t);
 // itself must be located in the space allocated for the master pagetable, and
 // should be offset by the kernel's virtual address
 void paging_vmap(uint32_t, Pagetable*);
+
+// invalidates the TLB entry for the virtual address of a page
+void paging_invalidate_tlb(void*);
 
 #endif

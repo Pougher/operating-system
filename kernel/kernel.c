@@ -3,6 +3,7 @@
 #include "../core/multiboot.h"
 #include "../core/physical_memory_manager.h"
 #include "../core/paging.h"
+#include "../core/virtual_memory_manager.h"
 
 #include "../drivers/vga.h"
 
@@ -25,6 +26,26 @@ void kernel_init(Pagetable *pagetable, multiboot_info_t *mbi) {
     pmm_init();
 }
 
+void test_vmap() {
+    printf("\x8aTesting memory allocation\x8f\n");
+    uint32_t *arr1 = vmm_map_memory(0x00000000, sizeof(uint32_t) * 1024);
+    arr1[0] = 0x69420;
+    printf("*(0x00000000) = ");
+    print_u32(arr1[0]);
+    printf(", deallocated 0x00000000\n");
+    vmm_unmap_memory(0x00000000, sizeof(uint32_t) * 1024);
+    uint32_t *arr2 = vmm_map_memory(0x10000000, sizeof(uint32_t) * 1024);
+    //arr2[0] = 0x42420;
+    printf("*(0x10000000) = ");
+    print_u32(arr2[0]);
+    printf("\n");
+    arr1 = vmm_map_memory(0x00000000, sizeof(uint32_t) * 1024);
+    arr1[0] = 0x42069;
+    printf("*(0x00000000) = ");
+    print_u32(arr1[0]);
+    printf("\n\n\n");
+}
+
 void kernel_main(unsigned int boot_page_2, unsigned int ebx) {
     multiboot_info_t *mbinfo = (multiboot_info_t*)ebx;
     Pagetable *pagetable = (Pagetable*)boot_page_2;
@@ -37,7 +58,8 @@ void kernel_main(unsigned int boot_page_2, unsigned int ebx) {
     //printf("\x8a    printf\x8f(\x8a\"%s\"\x8f,\x83 message\x8f);\n");
     //printf("    \x8creturn\x8d 0\x8f;\n}");
 
-/*
+    test_vmap();
+
 printf("    @@@                 @@@@     \n");
 printf("   @++#@@@            @@+##@     \n");
 printf("   @+#,,++@@@     @@@@++,,,#@    \n");
@@ -86,7 +108,6 @@ printf("   ,,,,,##    ,@@       @@,      \n");
 printf("    ,,,#+                        \n");
 printf("      +++                        \n");
 printf("                                 \n\n");
-printf("Hello from a Higher-Half Kernel!\n");*/
     while(1){
     }
 }
