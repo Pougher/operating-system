@@ -28,21 +28,9 @@ void kernel_init(Pagetable *pagetable, multiboot_info_t *mbi) {
 
 void test_vmap() {
     printf("\x8aTesting memory allocation\x8f\n");
-    uint32_t *arr1 = vmm_map_memory(0x00000000, sizeof(uint32_t) * 1024);
-    arr1[0] = 0x69420;
-    printf("*(0x00000000) = ");
-    print_u32(arr1[0]);
-    printf(", deallocated 0x00000000\n");
-    vmm_unmap_memory(0x00000000, sizeof(uint32_t) * 1024);
-    uint32_t *arr2 = vmm_map_memory(0x10000000, sizeof(uint32_t) * 1024);
-    //arr2[0] = 0x42420;
-    printf("*(0x10000000) = ");
-    print_u32(arr2[0]);
-    printf("\n");
-    arr1 = vmm_map_memory(0x00000000, sizeof(uint32_t) * 1024);
-    arr1[0] = 0x42069;
-    printf("*(0x00000000) = ");
-    print_u32(arr1[0]);
+    uint32_t *arr = vmm_map_memory((void*)0x00100000, 32 * sizeof(uint32_t));
+    arr[32] = 0x69;
+    print_u32(arr[33]);
     printf("\n\n\n");
 }
 

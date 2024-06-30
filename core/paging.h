@@ -23,6 +23,17 @@
 
 #define PT_VIRTUAL_OFFSET   0xC0400000
 
+// PAGE_INDEX returns the page index of an address
+#define PAGE_INDEX(ptr) ((uint32_t)ptr >> PAGE_SHIFT)
+
+// PDIR_INDEX returns the index of an address in the page directory
+#define PDIR_INDEX(ptr) ((uint32_t)ptr >> 22)
+
+// type that represents a pointer that lies on a 4096-byte boundary (is page
+// aligned). Any pointer that is declared as a page_aligned_ptr must be page
+// aligned
+typedef void* page_aligned_ptr;
+
 typedef struct {
     unsigned int present : 1;
     unsigned int rw      : 1;
@@ -34,7 +45,7 @@ typedef struct {
 } Page;
 
 typedef struct {
-    Page pages[1024] __attribute__((aligned(4096)));
+    Page pages[1024] __attribute__((aligned(PAGE_SIZE)));
 } Pagetable;
 
 typedef struct {

@@ -130,17 +130,17 @@ void *pmm_request_page() {
     return NULL;
 }
 
-void pmm_free_page(void *page) {
+void pmm_free_page(page_aligned_ptr page) {
     // the page number
-    uint32_t pg = (uint32_t)page >> PAGE_SHIFT;
+    uint32_t pg = PAGE_INDEX(page);
 
     // clears the page bit (sets it to 0) to indicate a free page
     pmm.free_pages[pg >> 5] =
         pmm.free_pages[pg >> 5] & ~((uint32_t)1 << (pg % 32));
 }
 
-void pmm_mark_region_free(void *dst, size_t length) {
-    uint32_t page_number = ((uint32_t)dst) >> PAGE_SHIFT;
+void pmm_mark_region_free(page_aligned_ptr dst, size_t length) {
+    uint32_t page_number = PAGE_INDEX(dst);
     uint32_t page_end = (((uint32_t)length) >> PAGE_SHIFT) + page_number;
 
     // the start and end index of the page number in the bitmap

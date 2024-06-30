@@ -1,9 +1,12 @@
 #include "virtual_memory_manager.h"
 
-void *vmm_map_memory(uint32_t virtual_address, uint32_t length) {
-    Pagetable *table = paging_get_table((uint16_t)(virtual_address >> 22));
+void *vmm_map_memory(page_aligned_ptr virtual_address, uint32_t length) {
+    Pagetable *table = paging_get_table((uint16_t)PDIR_INDEX(virtual_address));
 
-    for (uint32_t i = 0; i < length; i += 4096) {
+    const uint32_t page_offset = ((uint32_t)virtual_address & PAGE_MASK) >> 12;
+    const uint32_t page_range = page_offset * PAGE_SIZE + length;
+
+    for (uint32_t i = page_offset * PAGE_SIZE; i < page_range; i += 4096) {
         // physical address of the page that we found in memory
         uint32_t page_physical = (uint32_t)pmm_request_page();
 
@@ -16,15 +19,13 @@ void *vmm_map_memory(uint32_t virtual_address, uint32_t length) {
         table->pages[i >> PAGE_SHIFT] = new_page;
     }
 
-    paging_vmap(virtual_address, table);
+    paging_vmap((uint32_t)virtual_address, table);
 
     return (void*)virtual_address;
 }
 
-void vmm_unmap_memory(void *virtual_address, uint32_t length) {
-    Pagetable *table = paging_get_table(
-        (uint16_t)((uint32_t)virtual_address >> 22)
-    );
+void vmm_unmap_memory(page_aligned_ptr virtual_address, uint32_t length) {
+    Pagetable *table = paging_get_table((uint16_t)PDIR_INDEX(virtual_address));
 
     for (uint32_t i = 0; i < length; i += 4096) {
         uint32_t page_vaddress = (uint32_t)virtual_address + i;
