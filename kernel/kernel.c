@@ -28,9 +28,11 @@ void kernel_init(Pagetable *pagetable, multiboot_info_t *mbi) {
 
 void test_vmap() {
     printf("\x8aTesting memory allocation\x8f\n");
-    uint32_t *arr = vmm_map_memory((void*)0x00100000, 32 * sizeof(uint32_t));
+    uint32_t *arr = vmm_map_memory((void*)0x00010000, 32 * sizeof(uint32_t));
+    uint32_t *arr2 = vmm_map_memory((void*)0x00000000, 32 * sizeof(uint32_t));
     arr[32] = 0x69;
-    print_u32(arr[33]);
+    arr2[32] = 0x42;
+    print_u32(arr[32]);
     printf("\n\n\n");
 }
 
@@ -48,6 +50,7 @@ void kernel_main(unsigned int boot_page_2, unsigned int ebx) {
 
     test_vmap();
 
+    /*
 printf("    @@@                 @@@@     \n");
 printf("   @++#@@@            @@+##@     \n");
 printf("   @+#,,++@@@     @@@@++,,,#@    \n");
@@ -95,7 +98,7 @@ printf("  +++,,,#  ,,,,@@, ,,, ,@@,,,    \n");
 printf("   ,,,,,##    ,@@       @@,      \n");
 printf("    ,,,#+                        \n");
 printf("      +++                        \n");
-printf("                                 \n\n");
+printf("                                 \n\n");*/
     while(1){
     }
 }

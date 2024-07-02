@@ -6,6 +6,7 @@ void paging_init(PhysicalMemoryManager *pmm, Pagetable *master) {
     // find the physical address of where to put the pagetable data
     uint8_t *pagetable_physical = pmm->memory_base + pmm->mb_size -
         (sizeof(Pagetable) * PAGE_TABLE_COUNT);
+    print_u32((uint32_t)pagetable_physical);
 
     pt_meta.physical_address = pagetable_physical;
 
