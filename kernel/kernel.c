@@ -4,15 +4,19 @@
 #include "../core/physical_memory_manager.h"
 #include "../core/paging.h"
 #include "../core/virtual_memory_manager.h"
+#include "../core/allocator.h"
 
 #include "../drivers/vga.h"
 
 void kernel_init(Pagetable *pagetable, multiboot_info_t *mbi) {
-    // integral functions to the operation of the system
+    // updates the global descriptor table to set up the permissions for
+    // different segments of memory
     gdt_install_gdt();
 
-    // functions for the operation of the kernel
+    // initializes the formatter used for outputting to the console
     format_init();
+
+    // initializes the VGA driver by setting the VGA registers, palettes etc.
     driver_vga_init();
 
     // clear the screen and set the background colour to grey
@@ -22,18 +26,28 @@ void kernel_init(Pagetable *pagetable, multiboot_info_t *mbi) {
     // initialize memory managers
     pmm_find_usable_memory(mbi);
     paging_init(&pmm, pagetable);
-
     pmm_init();
+
+    // initialize the global memory allocator
+    allocator_init();
 }
 
-void test_vmap() {
-    printf("\x8aTesting memory allocation\x8f\n");
-    uint32_t *arr = vmm_map_memory((void*)0x00010000, 32 * sizeof(uint32_t));
-    uint32_t *arr2 = vmm_map_memory((void*)0x00000000, 32 * sizeof(uint32_t));
-    arr[32] = 0x69;
-    arr2[32] = 0x42;
-    print_u32(arr[32]);
-    printf("\n\n\n");
+void test_malloc() {
+    char *mem = kmalloc(4079);
+    HeapChunk *hc = ((HeapChunk*)mem);
+    print_u32((uint32_t)mem);
+/*
+    for (uint32_t i = 0; i < 256; i++) {
+        uint32_t x = (((uint32_t*)allocator_get_heap())[i]);
+        if (x != 0) {
+            printf("\x8e");
+            print_u32(x);
+            printf("\x8f");
+        } else {
+            print_u32(x);
+        }
+        printf(" ");
+    }*/
 }
 
 void kernel_main(unsigned int boot_page_2, unsigned int ebx) {
@@ -41,64 +55,56 @@ void kernel_main(unsigned int boot_page_2, unsigned int ebx) {
     Pagetable *pagetable = (Pagetable*)boot_page_2;
 
     kernel_init(pagetable, mbinfo);
-
-    //printf("\x98\x87// program to output 'Hello, world!'\n");
-    //printf("\x8e""int\x8a" " main\x8f() {\n");
-    //printf("\x8e    char\x8f *\x83message\x8f = \x8a\"Hello, world!\"\x8f;\n\n");
-    //printf("\x8a    printf\x8f(\x8a\"%s\"\x8f,\x83 message\x8f);\n");
-    //printf("    \x8creturn\x8d 0\x8f;\n}");
-
-    test_vmap();
-
-    /*
-printf("    @@@                 @@@@     \n");
-printf("   @++#@@@            @@+##@     \n");
-printf("   @+#,,++@@@     @@@@++,,,#@    \n");
-printf("   @#,,,+++++@@@@@+++++,,,,#@    \n");
-printf("   @#,,,,++++++++++++++#,,,+@    \n");
-printf("   @+,,,,,++++++++++++++,,#,@    \n");
-printf("   @+,,,#+++++++++++++++###,@    \n");
-printf("    +,,#+++++++++++++++++++,     \n");
-printf("    @++++++@@@@++++++@@@++++     \n");
-printf("     @++++++@@@@++++@@@++++++    \n");
-printf("    @+++++@@,,,,++++,,,,,@@++    \n");
-printf("    +++++@,,,,,,,,,,,,,,,,,@++   \n");
-printf("    ++++@,,,,,,,,,,,,,,,,,,,@+   \n");
-printf("   ++++@,,,,,,,,,,,,,,,   ,,,@+  \n");
-printf("  +++++@,,,,   ,,,,,@@,   ,,,@++ \n");
-printf("  +++++@,,,,   ,@@...@@   ,,,@++ \n");
-printf("  +++++@,,,,   @@@@.@@@@++,,,@@+ \n");
-printf("  +@+++@,,,,+@@@.@.@.@.@@@,,@@@+ \n");
-printf("  #@@+@@@,,,@@@@@.@@@.@@@@@@@@++ \n");
-printf("   @@@@@@@@@@@@@@@@@@@@@@@@@@@#  \n");
-printf("    @@@@@@@@@@@@@@@@@@@@@@@@@@   \n");
-printf("    @@@@@@@@@@@@@@@@@@@@@@@@@@   \n");
-printf("     @@@@@@@@@@@@@@@@@@@@@@@@    \n");
-printf("      @@@@@@@@@@@@@@@@@@@@@@     \n");
-printf("       ++++@@@@@@@@@@@@@@        \n");
-printf("        +++++@@@@@@@@@@@  +++    \n");
-printf("        ++++++++@@@@@@+++++++    \n");
-printf("       ++++#+++++@@@+++++#++#    \n");
-printf("       #+##++++++++++++##+++#    \n");
-printf("       #+++    ++++++++  +++#    \n");
-printf("       #++++++ +++@@@++::::::    \n");
-printf("       ##++++++ +   :::::::::#   \n");
-printf("      # ##++++++  :::::::::::##  \n");
-printf("      ##  ##++++  :::::::::::##  \n");
-printf("    , ####  ##++  ::::,,:::::+#  \n");
-printf("   ,, ###++#  , + ::::,,:::::++# \n");
-printf("  #,, ###+++#  + :::::::::::+++# \n");
-printf("  +#, ##+++  ::: :::::::::::++## \n");
-printf(" +++# ###+++  :: :::::::::::++#  \n");
-printf(" +,,, ,#+++++  : :::::      ++#  \n");
-printf(" ,,,, ,+++++++        +, ++++#,  \n");
-printf(" ,,+## ,,++++,,,@ +@@+  ,@,+##   \n");
-printf("  ++##,  ,,,+,@,,, ++, @,,,##,   \n");
-printf("  +++,,,#  ,,,,@@, ,,, ,@@,,,    \n");
-printf("   ,,,,,##    ,@@       @@,      \n");
-printf("    ,,,#+                        \n");
-printf("      +++                        \n");
-printf("                                 \n\n");*/
+    test_malloc();
+/*
+    printf("    @@@                 @@@@     \n");
+    printf("   @++#@@@            @@+##@     \n");
+    printf("   @+#,,++@@@     @@@@++,,,#@    \n");
+    printf("   @#,,,+++++@@@@@+++++,,,,#@    \n");
+    printf("   @#,,,,++++++++++++++#,,,+@    \n");
+    printf("   @+,,,,,++++++++++++++,,#,@    \n");
+    printf("   @+,,,#+++++++++++++++###,@    \n");
+    printf("    +,,#+++++++++++++++++++,     \n");
+    printf("    @++++++@@@@++++++@@@++++     \n");
+    printf("     @++++++@@@@++++@@@++++++    \n");
+    printf("    @+++++@@,,,,++++,,,,,@@++    \n");
+    printf("    +++++@,,,,,,,,,,,,,,,,,@++   \n");
+    printf("    ++++@,,,,,,,,,,,,,,,,,,,@+   \n");
+    printf("   ++++@,,,,,,,,,,,,,,,   ,,,@+  \n");
+    printf("  +++++@,,,,   ,,,,,@@,   ,,,@++ \n");
+    printf("  +++++@,,,,   ,@@   @@   ,,,@++ \n");
+    printf("  +++++@,,,,   @@@@ @@@@++,,,@@+ \n");
+    printf("  +@+++@,,,,+@@@ @ @ @ @@@,,@@@+ \n");
+    printf("  #@@+@@@,,,@@@@@ @@@ @@@@@@@@++ \n");
+    printf("   @@@@@@@@@@@@@@@@@@@@@@@@@@@#  \n");
+    printf("    @@@@@@@@@@@@@@@@@@@@@@@@@@   \n");
+    printf("    @@@@@@@@@@@@@@@@@@@@@@@@@@   \n");
+    printf("     @@@@@@@@@@@@@@@@@@@@@@@@    \n");
+    printf("      @@@@@@@@@@@@@@@@@@@@@@     \n");
+    printf("       ++++@@@@@@@@@@@@@@        \n");
+    printf("        +++++@@@@@@@@@@@  +++    \n");
+    printf("        ++++++++@@@@@@+++++++    \n");
+    printf("       ++++#+++++@@@+++++#++#    \n");
+    printf("       #+##++++++++++++##+++#    \n");
+    printf("       #+++    ++++++++  +++#    \n");
+    printf("       #++++++ +++@@@++::::::    \n");
+    printf("       ##++++++ +   :::::::::#   \n");
+    printf("      # ##++++++  :::::::::::##  \n");
+    printf("      ##  ##++++  :::::::::::##  \n");
+    printf("    , ####  ##++  ::::,,:::::+#  \n");
+    printf("   ,, ###++#  , + ::::,,:::::++# \n");
+    printf("  #,, ###+++#  + :::::::::::+++# \n");
+    printf("  +#, ##+++  ::: :::::::::::++## \n");
+    printf(" +++# ###+++  :: :::::::::::++#  \n");
+    printf(" +,,, ,#+++++  : :::::      ++#  \n");
+    printf(" ,,,, ,+++++++        +, ++++#,  \n");
+    printf(" ,,+## ,,++++,,,@ +@@+  ,@,+##   \n");
+    printf("  ++##,  ,,,+,@,,, ++, @,,,##,   \n");
+    printf("  +++,,,#  ,,,,@@, ,,, ,@@,,,    \n");
+    printf("   ,,,,,##    ,@@       @@,      \n");
+    printf("    ,,,#+                        \n");
+    printf("      +++                        \n");
+    printf("                                 \n\n");*/
     while(1){
     }
 }

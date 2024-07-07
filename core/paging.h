@@ -20,6 +20,7 @@
 #define PAGE_SHIFT          12
 
 #define PAGE_TABLE_COUNT    1024
+#define PAGE_TABLE_SIZE     4194304
 
 #define PT_VIRTUAL_OFFSET   0xC0400000
 

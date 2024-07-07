@@ -91,7 +91,6 @@ void gdt_install_gdt() {
         USER_DATA_ACCESS_BYTE,
         SEGMENT_FLAGS_PART
     );
-	//gdt_init_descriptor(2, SEGMENT_BASE, SEGMENT_LIMIT, SEGMENT_DATA_TYPE, SEGMENT_FLAGS_PART);
 
 	gdt_load_gdt(*gdt_ptr);
 	gdt_load_registers();
