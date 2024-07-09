@@ -19,6 +19,9 @@ typedef struct {
 
     // the size of the heap in bytes
     uint32_t size;
+
+    // the number of bytes that are currently allocated
+    uint32_t allocated;
 } HeapMetadata;
 
 // stores information about a specific portion of memory on the heap. Type is
@@ -49,6 +52,9 @@ void allocator_init();
 
 // returns a pointer to the heap
 void *allocator_get_heap();
+
+// returns the number of bytes currently allocated on the heap
+uint32_t allocator_get_allocated();
 
 // splits a heap chunk into two consecutive heap chunks
 void allocator_split_heapchunk(HeapChunk*, uint32_t);

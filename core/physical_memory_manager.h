@@ -46,7 +46,7 @@ void pmm_init_bitmap();
 // marks an entire memory area as free, takes a page-aligned physical pointer
 // and a size that when added to the physical pointer produces another page
 // aligned physical address
-void pmm_mark_region_free(void*, size_t);
+void pmm_mark_region_free(void*, uint32_t);
 
 // finds and returns a free page that exists in physical RAM. If no usable
 // addresses are found, then a NULL pointer is returned

@@ -23,6 +23,11 @@ void pmm_find_usable_memory(multiboot_info_t *mbi) {
             (mbi->mmap_addr + i + (uint32_t)KERNEL_VIRTUAL_OFFSET);
 
         if (mmt->type == MULTIBOOT_MEMORY_AVAILABLE) {
+            printf("\x8a");
+            print_u32(mmt->addr);
+            printf(" ");
+            print_u32(mmt->len);
+            printf("\n");
             // the memory is usable
             if (mmt->len > pmm.mb_size && mmt->addr >= 0x100000) {
                 conv_union.in = mmt->addr;
@@ -43,6 +48,12 @@ void pmm_find_usable_memory(multiboot_info_t *mbi) {
 
                 pmm.mb_size = mmt->len;
             }
+        } else {
+            printf("\x8f");
+            print_u32(mmt->addr);
+            printf(" ");
+            print_u32(mmt->len);
+            printf("\n");
         }
     }
 
@@ -80,12 +91,15 @@ void pmm_allocate_bitmap() {
         (uint16_t)(PMM_BITMAP_ADDRESS >> 22)
     );
 
-    for (size_t i = 0; i < 1024; i++) {
+    for (uint32_t i = 0; i < 1024; i++) {
         bitmap_table->pages[i].frame = addr >> PAGE_SHIFT;
         bitmap_table->pages[i].present = PAGE_PRESENT;
         bitmap_table->pages[i].rw = PAGE_READWRITE;
 
         addr += PAGE_SIZE;
+
+        uint32_t page_vaddress = (uint32_t)PMM_BITMAP_ADDRESS + i * PAGE_SIZE;
+        paging_invalidate_tlb((void*)page_vaddress);
     }
 
     paging_vmap(PMM_BITMAP_ADDRESS, bitmap_table);
@@ -107,9 +121,9 @@ void pmm_init_bitmap() {
 void *pmm_request_page() {
     // first, search through the array looking for an index that isn't all 1s
     // (has a free slot)
-    for (size_t i = 0; i < PMM_BITMAP_SIZE; i++) {
+    for (uint32_t i = 0; i < PMM_BITMAP_SIZE; i++) {
         if (pmm.free_pages[i] != 0xffffffff) {
-            uint8_t zero_index = 0;
+            uint32_t zero_index = 0;
             uint32_t value = pmm.free_pages[i];
 
             // get the index of the zero bit
@@ -139,18 +153,18 @@ void pmm_free_page(page_aligned_ptr page) {
         pmm.free_pages[pg >> 5] & ~((uint32_t)1 << (pg % 32));
 }
 
-void pmm_mark_region_free(page_aligned_ptr dst, size_t length) {
+void pmm_mark_region_free(page_aligned_ptr dst, uint32_t length) {
     uint32_t page_number = PAGE_INDEX(dst);
     uint32_t page_end = (((uint32_t)length) >> PAGE_SHIFT) + page_number;
 
     // the start and end index of the page number in the bitmap
-    uint16_t start_index = page_number >> 5;
-    uint16_t end_index = page_end >> 5;
+    uint32_t start_index = page_number >> 5;
+    uint32_t end_index = page_end >> 5;
 
     // the start and bit offset into the byte at the start_index and the byte
     // at the end_index
-    uint8_t start_bit_offset = page_number % 32;
-    uint8_t end_bit_offset = page_end % 32;
+    uint32_t start_bit_offset = page_number % 32;
+    uint32_t end_bit_offset = page_end % 32;
 
     if (start_index == end_index) {
         pmm.free_pages[start_index] = (UINT32_MAX >> (32 - start_bit_offset)) |
@@ -167,7 +181,7 @@ void pmm_mark_region_free(page_aligned_ptr dst, size_t length) {
         pmm.free_pages[end_index] = 0xffffffff << end_bit_offset;
     }
 
-    for (size_t i = start_index; i < end_index; i++) {
+    for (uint32_t i = start_index; i < end_index; i++) {
         pmm.free_pages[i] = 0x00;
     }
 }

@@ -21,6 +21,9 @@ void paging_init(PhysicalMemoryManager *pmm, Pagetable *master) {
         master->pages[i] = current_page;
 
         pagetable_physical += sizeof(Pagetable);
+
+        const uint32_t page_vaddress = PT_VIRTUAL_OFFSET + i * PAGE_SIZE;
+        paging_invalidate_tlb((void*)page_vaddress);
     }
 
     // get cr3 which holds the location of the page directory and write the

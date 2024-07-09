@@ -29,15 +29,19 @@ void kernel_init(Pagetable *pagetable, multiboot_info_t *mbi) {
     pmm_init();
 
     // initialize the global memory allocator
-    allocator_init();
+    //allocator_init();
 }
 
 void test_malloc() {
-    char *mem = kmalloc(4079);
-    HeapChunk *hc = ((HeapChunk*)mem);
-    print_u32((uint32_t)mem);
-/*
-    for (uint32_t i = 0; i < 256; i++) {
+    char *mem = kmalloc(400);
+    mem = kmalloc(5000);
+    print_u32(allocator_get_allocated());
+    printf("\n");
+    kfree(mem);
+    print_u32(allocator_get_allocated());
+    printf("\n");
+
+    for (uint32_t i = 0; i < 10; i++) {
         uint32_t x = (((uint32_t*)allocator_get_heap())[i]);
         if (x != 0) {
             printf("\x8e");
@@ -47,7 +51,8 @@ void test_malloc() {
             print_u32(x);
         }
         printf(" ");
-    }*/
+    }
+    printf("\n");
 }
 
 void kernel_main(unsigned int boot_page_2, unsigned int ebx) {
@@ -55,7 +60,7 @@ void kernel_main(unsigned int boot_page_2, unsigned int ebx) {
     Pagetable *pagetable = (Pagetable*)boot_page_2;
 
     kernel_init(pagetable, mbinfo);
-    test_malloc();
+    //test_malloc();
 /*
     printf("    @@@                 @@@@     \n");
     printf("   @++#@@@            @@+##@     \n");

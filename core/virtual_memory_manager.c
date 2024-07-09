@@ -35,6 +35,9 @@ void *vmm_map_memory(page_aligned_ptr virtual_address, uint32_t length) {
         uint32_t page_physical = (uint32_t)pmm_request_page();
 
         if ((void*)page_physical == NULL) {
+            // unmap all of the memory allocated by this vmap call since it
+            // failed to find all of the required memory
+            vmm_unmap_memory(virtual_address, (page_offset * PAGE_SIZE) - i);
             return NULL;
         }
 
