@@ -52,7 +52,9 @@ void kernel_main(unsigned int boot_page_2, unsigned int ebx) {
     Pagetable *pagetable = (Pagetable*)boot_page_2;
 
     kernel_init(pagetable, mbinfo);
-    print_u32(syscall(0));
+    uint32_t mem = syscall1(0, 4096);
+    syscall1(1, mem);
+    print_u32(syscall1(0, 20));
 /*
     printf("    @@@                 @@@@     \n");
     printf("   @++#@@@            @@+##@     \n");

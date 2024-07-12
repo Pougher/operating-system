@@ -1,4 +1,5 @@
 #include "syscall.h"
+#include "sys/sysdef.h"
 
 // the system call table that is indexed into whenever a system call is recieved
 uint32_t (*system_call_table[NUM_SYSCALLS])(uint32_t, uint32_t, uint32_t)
@@ -25,13 +26,10 @@ void syscall_handler(Registers *registers) {
     }
 }
 
-SYSCALL_DEFINE0(0) {
-    printf("Test system call 0!\n");
-
-    SYSCALL_RETURN(0x40);
-}
-
 void syscall_init() {
     isr_register_handler(SYSCALL_INT_NUMBER, syscall_handler);
+
     system_call_table[0] = SYSCALL_GET(0);
+    system_call_table[1] = SYSCALL_GET(1);
+    system_call_table[2] = SYSCALL_GET(2);
 }

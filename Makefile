@@ -1,5 +1,7 @@
-C_SOURCES = $(wildcard kernel/*.c drivers/*.c font/*.c core/*.c shell/*.c)
-HEADERS = $(wildcard kernel/*.h drivers/*.h font/*.h core/*.h shell/*.h)
+C_SOURCES = $(wildcard kernel/*.c drivers/*.c font/*.c core/*.c shell/*.c \
+	core/sys/*.c)
+HEADERS = $(wildcard kernel/*.h drivers/*.h font/*.h core/*.h shell/*.h \
+	core/sys/*.h)
 OBJ = ${C_SOURCES:.c=.o}
 QEMU = qemu-system-x86_64
 

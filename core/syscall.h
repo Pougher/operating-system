@@ -16,12 +16,17 @@
 #define SYSCALL_INT_NUMBER  0x40
 
 // the number of currently recognized system calls
-#define NUM_SYSCALLS 1
+#define NUM_SYSCALLS 3
+
+// values that are returned by a system call depending on whether its
+// execution was a success or a failure
+#define SYSCALL_SUCCESS 0
+#define SYSCALL_FAILURE -1
 
 // syscall macros to handle the definition of a system call.
 // SYSCALL_DEFINE0 is used to define a system call that takes no arguments.
 #define SYSCALL_DEFINE0(num) \
-    static uint32_t _syscall##num( \
+    uint32_t _syscall##num( \
         __attribute__((unused)) uint32_t _stub0, \
         __attribute__((unused)) uint32_t _stub1, \
         __attribute__((unused)) uint32_t _stub2 \
@@ -31,19 +36,19 @@
 // and each subsequent system call define defines a system call with one
 // additional argument
 #define SYSCALL_DEFINE1(num, arg1) \
-    static uint32_t _syscall##num( \
+    uint32_t _syscall##num( \
         uint32_t arg1, \
         __attribute__((unused)) uint32_t _stub1, \
         __attribute__((unused)) uint32_t _stub2 \
     )
 #define SYSCALL_DEFINE2(num, arg1, arg2) \
-    static uint32_t _syscall##num( \
+    uint32_t _syscall##num( \
         uint32_t arg1, \
         uint32_t arg2, \
-        __attribute__((unused)) _stub2 \
+        __attribute__((unused)) uint32_t _stub2 \
     )
 #define SYSCALL_DEFINE3(num, arg1, arg2, arg3) \
-    static uint32_t _syscall##num(uint32_t arg1, uint32_t arg2, uint32_t arg3)
+    uint32_t _syscall##num(uint32_t arg1, uint32_t arg2, uint32_t arg3)
 
 // macro to construct the name of a system call function from its number
 #define SYSCALL_GET(n) _syscall##n
@@ -52,6 +57,16 @@
 #define SYSCALL_RETURN(x) \
     *((volatile uint32_t*)SYSCALL_NUMBER) = (uint32_t)x; \
     return 0;
+
+// macro that is used at the end of syscalls that do not return a value, to
+// indicate that the system call completed successfully
+#define SYSCALL_EXIT \
+    *((volatile uint32_t*)SYSCALL_NUMBER) = SYSCALL_SUCCESS; \
+    return 0;
+
+// macro to define a system call prototype
+#define SYSCALL_PROTO_DEFINE(x) \
+    uint32_t _syscall##x(uint32_t, uint32_t, uint32_t)
 
 // calls a numbered system call that may return a value. If a system call does
 // not return a value, the return value of syscall will always be 0. This is the
