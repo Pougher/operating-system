@@ -2,6 +2,7 @@ Memory map of the operating system:
 
 0xC0000000-0xC0400000: The kernel (4MiB)
 0xC0400000-0xC0800000: Pagetables (4MiB)
+0xC0BFFFF0-0xC0C00000: System call data (16 Bytes)
 0xC0800000-0xC1000000: Memory allocator metadata (8MiB)
 0xC1000000-0xC1400000: The shell (4MiB)
 

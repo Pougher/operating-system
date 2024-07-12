@@ -23,13 +23,9 @@ void pmm_find_usable_memory(multiboot_info_t *mbi) {
             (mbi->mmap_addr + i + (uint32_t)KERNEL_VIRTUAL_OFFSET);
 
         if (mmt->type == MULTIBOOT_MEMORY_AVAILABLE) {
-            printf("\x8a");
-            print_u32(mmt->addr);
-            printf(" ");
-            print_u32(mmt->len);
-            printf("\n");
             // the memory is usable
-            if (mmt->len > pmm.mb_size && mmt->addr >= 0x100000) {
+            if (mmt->len > pmm.mb_size && mmt->addr >= 0x100000
+                && mmt->addr <= UINT32_MAX) {
                 conv_union.in = mmt->addr;
                 pmm.memory_base = conv_union.out;
 
@@ -48,12 +44,6 @@ void pmm_find_usable_memory(multiboot_info_t *mbi) {
 
                 pmm.mb_size = mmt->len;
             }
-        } else {
-            printf("\x8f");
-            print_u32(mmt->addr);
-            printf(" ");
-            print_u32(mmt->len);
-            printf("\n");
         }
     }
 

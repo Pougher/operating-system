@@ -8,20 +8,30 @@ GDB = i686-elf-gdb
 CFLAGS = -g -O3 -Wall -pedantic -Wextra -nostdlib -Wno-stringop-overflow
 
 
-os.bin: ${OBJ} boot.o gdt.o util.o
+os.bin: ${OBJ} boot/boots.o core/gdts.o core/utils.o core/idts.o core/isrs.o \
+	core/syscalls.o
 	${CC} -ffreestanding -nostdlib -T linker.ld -o $@ $^ -lgcc
 	mkdir -p isodir/boot/grub
 	cp os.bin isodir/boot/os.bin
 	cp grub/grub.cfg isodir/boot/grub/grub.cfg
 	grub-mkrescue -o os.iso isodir
 
-boot.o: boot/boot.s
+boot/boots.o: boot/boot.s
 	i686-elf-as $^ -o $@
 
-gdt.o: core/gdt.s
+core/gdts.o: core/gdt.s
 	nasm -felf32 $< -o $@
 
-util.o: core/util.s
+core/utils.o: core/util.s
+	nasm -felf32 $< -o $@
+
+core/idts.o: core/idt.s
+	nasm -felf32 $< -o $@
+
+core/isrs.o: core/isr.s
+	nasm -felf32 $< -o $@
+
+core/syscalls.o: core/syscall.s
 	nasm -felf32 $< -o $@
 
 run:

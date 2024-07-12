@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#define DRIVER_UNUSED_PORT 0x80
+
 // writes an 8-bit value to the specified port number
 __attribute__((regparm(2), always_inline))
 static inline void port_outb(uint16_t port, uint8_t value) {
@@ -47,5 +49,9 @@ static inline uint16_t port_in(uint16_t port) {
 
     return ret;
 }
+
+// waits a small amount of time on the order of 1-4 microseconds by writing to
+// an unused port
+void driver_io_wait();
 
 #endif

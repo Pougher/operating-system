@@ -5,8 +5,12 @@
 #include "../core/paging.h"
 #include "../core/virtual_memory_manager.h"
 #include "../core/allocator.h"
+#include "../core/idt.h"
+#include "../core/isr.h"
+#include "../core/syscall.h"
 
 #include "../drivers/vga.h"
+#include "../drivers/pic.h"
 
 void kernel_init(Pagetable *pagetable, multiboot_info_t *mbi) {
     // updates the global descriptor table to set up the permissions for
@@ -23,36 +27,24 @@ void kernel_init(Pagetable *pagetable, multiboot_info_t *mbi) {
     driver_vga_clear(0x8);
     printf("\x98");
 
+    // initialize the PIC
+    pic_init();
+
     // initialize memory managers
     pmm_find_usable_memory(mbi);
     paging_init(&pmm, pagetable);
     pmm_init();
 
     // initialize the global memory allocator
-    //allocator_init();
-}
+    allocator_init();
 
-void test_malloc() {
-    char *mem = kmalloc(400);
-    mem = kmalloc(5000);
-    print_u32(allocator_get_allocated());
-    printf("\n");
-    kfree(mem);
-    print_u32(allocator_get_allocated());
-    printf("\n");
+    // initialize interrupts
+    idt_init();
+    isr_init();
+    idt_begin();
 
-    for (uint32_t i = 0; i < 10; i++) {
-        uint32_t x = (((uint32_t*)allocator_get_heap())[i]);
-        if (x != 0) {
-            printf("\x8e");
-            print_u32(x);
-            printf("\x8f");
-        } else {
-            print_u32(x);
-        }
-        printf(" ");
-    }
-    printf("\n");
+    // initialize the system call interface
+    syscall_init();
 }
 
 void kernel_main(unsigned int boot_page_2, unsigned int ebx) {
@@ -60,7 +52,7 @@ void kernel_main(unsigned int boot_page_2, unsigned int ebx) {
     Pagetable *pagetable = (Pagetable*)boot_page_2;
 
     kernel_init(pagetable, mbinfo);
-    //test_malloc();
+    print_u32(syscall(0));
 /*
     printf("    @@@                 @@@@     \n");
     printf("   @++#@@@            @@+##@     \n");
@@ -110,6 +102,5 @@ void kernel_main(unsigned int boot_page_2, unsigned int ebx) {
     printf("    ,,,#+                        \n");
     printf("      +++                        \n");
     printf("                                 \n\n");*/
-    while(1){
-    }
+    klock();
 }
