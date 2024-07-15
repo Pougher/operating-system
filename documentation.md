@@ -43,6 +43,7 @@ The Racoon memory map is as follows:
 | 0xBFFFFFFF | The Stack | Grows Down |
 
 _**The Kernel**_
+
 Contains general code and functions relating to the maintaining of the proper function of the system. This code area also contains information regarding several internal datastructures which may be manipulated directly or indirectly via system calls. This memory area under no circumstances should be written to or modified, as doing so could impede the functioning of the operating system. Generally speaking, this virtual memory area also contains all loaded drivers and their respective data structures.
 
 By default, the following drivers are loaded by the kernel:
@@ -54,6 +55,7 @@ After the boot stage, the kernel is loaded first, as it must be set up prior to 
 More information about the kernel can be found in the kernel section of the documentation.
 
 _**Pagetable Data**_
+
 In x86, addresses are represented by two different systems: virtual addresses and physical addresses. Physical addresses refer to the location of data in actual physical RAM, whereas virtual addresses are values that point to where data is in the virtual address space. For example, the physical addresses 0x049EFF90, 0x53280DF0 and 0x8C01000 may be mapped to the virtual addresses 0xA0000000...0xA0000003. This means that while the CPU may be writing to address 0xA0000000, the actual physical memory location that is being affected by this write lies at 0x049EFF90.
 
 These addresses can be set up by writing into something called a "pagetable" which is a data structure used in x86 to represent the mapping of a set of physical addresses to their virtual counterparts. Simply speaking, you can think of a pagetable as a long list of 1024 "pages" in an array structure that has a start address in physical RAM. A "page" is the term used in x86 to refer to a 4KiB block of memory in RAM. Thus a single pagetable holds mappings for a 4MiB area of RAM. This means that the granularity of the virtual address space is 4MiB, or that is that in memory only 4MiB memory areas can be mapped at a time.
@@ -65,17 +67,21 @@ Then, using this "master pagetable", a 4 Mebibyte region can be mapped that can 
 This memory is virtually mapped to address 0xC0400000 and modifying this memory region may cause complete system memory corruption, and more informaiton regarding pagetables can be found in the pagetable section of the documentation.
 
 **_System Call Data_**
+
 The System Call Data region refers to 16 bytes that are used by the System Call API to store System Call IDs, operands and return values. By default the address that is used to store the system call ID is also the address used to store the return value of the system call. 
 
 The 16 bytes is divided into 4 32-bit integer values, and writing to these locations will not cause any change in the functioning of the operating system unless an erroneous system call is raised (such as a syscall with 3 operands being called as a syscall with only 2 operands). More information can be found in the system calls section of the documentation.
 
 _**Shell Code**_
+
 [To be done]
 
 _**The Heap**_
+
 The Heap refers to a growing-upward section of memory that holds any data that has been allocated or deallocated by calling `malloc` or `free`. The Heap stores both Heap metadata and data contiguously in the same memory space, and so overwriting a metadata area via a heap overrun or arbitrary memory access can cause system failure. The Heap by default is allocated as a 4096 Byte block of memory, but when the Heap reaches maximum capacity, more memory may be allocated on top of this until no more physical memory is available to be used. For more information refer to the "The Heap" section of the documentation.
 
 _**The Stack**_
+
 The Stack is a data structure in x86 that refers to a section of memory and a pointer where the pointer moves downward whenever data is "pushed" onto the stack, and the pointer moves upward whenever data is "popped" from the stack.
 
 This is done via the `push` and `pop` x86 instructions which both respectively modify the stack and also the contents of the `%esp` register (the stack pointer).
