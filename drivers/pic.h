@@ -4,6 +4,8 @@
 #include <stdint.h>
 
 #include "driver_base.h"
+#include "../core/registers.h"
+#include "../core/format.h"
 
 // Driver for the 8259 PIC, will not work if the PIC is not present in a
 // computer system (no clue why that wouldn't be the case) - will either cause
@@ -40,6 +42,14 @@
 #define PIC_REMAPPED_IRQ_MASTER 0x20
 #define PIC_REMAPPED_IRQ_SLAVE  0x28
 
+// OCW3 commands to read PIC registers
+#define PIC_READ_ISR            0x0b
+#define PIC_READ_IRR            0x0a
+
+// when EOI is sent to the PIC, it informs the PIC that an interrupt has been
+// acknowledged and has ended, allowing the PIC to send further IRQs
+#define PIC_EOI                 0x20
+
 // disables the PIC
 void pic_disable();
 
@@ -50,6 +60,16 @@ void pic_irq_set_mask(uint16_t);
 
 // remaps the vector numbers used by the PIC
 void pic_remap_vectors(uint8_t, uint8_t);
+
+// returns the ISR (in service register) which can be used as a mask to see
+// what IRQs are currently being raised
+uint16_t pic_get_isr();
+
+// sends an EOI (end of interrupt) to the PIC
+void pic_send_eoi(uint8_t);
+
+// interrupt handler for PIC irqs (interrupts 32-48)
+void pic_irq_handler(Registers*);
 
 // initializes the PIC
 void pic_init();

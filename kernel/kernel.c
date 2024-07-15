@@ -52,9 +52,8 @@ void kernel_main(unsigned int boot_page_2, unsigned int ebx) {
     Pagetable *pagetable = (Pagetable*)boot_page_2;
 
     kernel_init(pagetable, mbinfo);
-    uint32_t mem = syscall1(0, 4096);
-    syscall1(1, mem);
-    print_u32(syscall1(0, 20));
+    printf("\x88\x9c""FATAL EXCEPTION: Page fault (0x0000000D)");
+    printf("\x88\x9c""\n%esp = 0xC00D198E");
 /*
     printf("    @@@                 @@@@     \n");
     printf("   @++#@@@            @@+##@     \n");

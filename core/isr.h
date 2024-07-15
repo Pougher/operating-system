@@ -7,6 +7,8 @@
 #include "util.h"
 #include "idt.h"
 
+#include "../drivers/pic.h"
+
 #define NUM_ISRS 65
 
 // external definitions for all of the interrupt service routines

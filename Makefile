@@ -44,5 +44,6 @@ run:
 
 clean:
 	rm -rf *.bin *.dis *.o os-image.bin *.elf
-	rm -rf kernel/*.o boot/*.bin drivers/*.o boot/*.o core/*.o font/*.o
+	rm -rf kernel/*.o boot/*.bin drivers/*.o boot/*.o core/*.o font/*.o \
+	core/sys/*.o
 	rm os.iso

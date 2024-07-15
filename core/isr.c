@@ -73,7 +73,13 @@ void isr_init() {
         idt_set(i, stubs[i], 0x08, 0x8e);
     }
 
+    // register default CPU exceptions
     for (uint32_t i = 0; i < 32; i++) {
         isr_register_handler(i, isr_exception_handler);
+    }
+
+    // register PIC IRQs
+    for (uint32_t i = 32; i < 48; i++) {
+        isr_register_handler(i, pic_irq_handler);
     }
 }
