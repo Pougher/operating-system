@@ -18,6 +18,11 @@ void format_add_cursor_x(uint32_t x) {
     _format_state.cursor_y += size_y;
 }
 
+void format_set_cursor_position(uint32_t x, uint32_t y) {
+    _format_state.cursor_x = x;
+    _format_state.cursor_y = y;
+}
+
 void printf(char *format) {
     const size_t format_length = strlen(format);
 

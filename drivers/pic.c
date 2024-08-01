@@ -1,5 +1,10 @@
 #include "pic.h"
 
+static void (*const pic_irq_table[])(Registers*) = {
+    NULL,
+    keyboard_handler
+};
+
 void pic_disable() {
     port_outb(PIC_MASTER_DATA_PORT, 0xff);
     port_outb(PIC_SLAVE_DATA_PORT, 0xff);
@@ -77,11 +82,12 @@ void pic_irq_handler(Registers *registers) {
             return;
         }
     }
-    if (irq == 0x01) {
-        printf("SCANCODE: ");
-        print_u32(port_inb(0x60));
-        printf("\n");
-    }
+
+    // call the appropriate PIC irq handler
+    // NOTE: These functions do not need to send an EOI as this is done for
+    // them by the pic irq handler itself
+    pic_irq_table[irq](registers);
+
     pic_send_eoi(irq);
 }
 

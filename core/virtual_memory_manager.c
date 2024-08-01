@@ -1,6 +1,8 @@
 #include "virtual_memory_manager.h"
 
 void *vmm_map_memory(page_aligned_ptr virtual_address, uint32_t length) {
+    if (length == 0) return NULL;
+
     // temporary variable that is incremented every time a page boundary is
     // crossed
     char *v_address = (char*)virtual_address;
@@ -58,6 +60,8 @@ void *vmm_map_memory(page_aligned_ptr virtual_address, uint32_t length) {
 }
 
 void vmm_unmap_memory(page_aligned_ptr virtual_address, uint32_t length) {
+    if (length == 0) return;
+
     char *v_address = (char*)virtual_address;
 
     // pointer to the pagetable that is currently being worked on, is updated

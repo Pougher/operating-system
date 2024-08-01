@@ -2,6 +2,7 @@
 #define CORE_ALLOCATOR_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "virtual_memory_manager.h"
 
@@ -10,6 +11,9 @@
 
 // function macro to implicitly cast any memory to a heapchunk
 #define HEAPCHUNK(mem) ((HeapChunk*)(mem))
+
+// function macro to test the first bit of the in_use field
+#define CHUNK_IN_USE(chunk) ((chunk->in_use & 1))
 
 // stores information about the current state of the heap, such as its current
 // size and its virtual address
@@ -39,13 +43,24 @@ typedef struct HeapChunk {
     uint32_t length;
 
     // stores a boolean, padded to 4 bytes to make the structure 16 bytes,
-    // dictates whether or not the heap chunk is free for use (4 bytes)
+    // dictates whether or not the heap chunk is free for use (4 bytes).
+    // The last 24 bits of the value are used to store a checksum that is used
+    // by the heap to protect against heap corruption
     uint32_t in_use;
 } __attribute__((packed, aligned(16))) HeapChunk;
 
 // initializes the heap structure by setting default size, and mapping some
 // memory for the heap
 void allocator_heap_init();
+
+// calculates a checksum from a given chunk
+uint32_t allocator_calculate_checksum(HeapChunk*);
+
+// sets the checksum for the specified chunk
+void allocator_set_checksum(HeapChunk*);
+
+// tests if the checksum bits of a chunk match up with its actual checksum
+bool allocator_test_checksum(HeapChunk*);
 
 // initializes the entire allocator
 void allocator_init();

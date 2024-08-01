@@ -4,6 +4,8 @@
 #include <stdint.h>
 
 #include "driver_base.h"
+#include "keyboard.h"
+
 #include "../core/registers.h"
 #include "../core/format.h"
 

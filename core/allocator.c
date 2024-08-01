@@ -24,6 +24,28 @@ void allocator_init() {
     first_chunk->last = NULL;
     first_chunk->length = heap_meta.size - sizeof(HeapChunk);
     first_chunk->in_use = 0;
+
+    allocator_set_checksum(first_chunk);
+}
+
+uint32_t allocator_calculate_checksum(HeapChunk *chunk) {
+    uint32_t checksum = ((uint32_t)chunk->next + (uint32_t)chunk->last) * 3;
+    checksum ^= chunk->length * 7;
+
+    return checksum;
+}
+
+void allocator_set_checksum(HeapChunk *chunk) {
+    uint32_t checksum = allocator_calculate_checksum(chunk);
+    chunk->in_use = ((checksum << 8) & 0xFFFFFF00) | (chunk->in_use & 1);
+}
+
+bool allocator_test_checksum(HeapChunk *chunk) {
+    uint32_t checksum = allocator_calculate_checksum(chunk) & 0xFFFFFF;
+
+    // test the chunk's stored checksum against the calculated one
+    uint32_t chunk_checksum = chunk->in_use >> 8;
+    return chunk_checksum == checksum;
 }
 
 void *allocator_get_heap() {
@@ -45,6 +67,15 @@ void allocator_split_heapchunk(HeapChunk *chunk, uint32_t size) {
     chunk->next->length = new_size;
     chunk->next->last = chunk;
     chunk->next->in_use = 0;
+
+    if (old_next_chunk) {
+        old_next_chunk->last = chunk->next;
+        allocator_set_checksum(old_next_chunk);
+    }
+
+    // update the checksums of the modified chunks
+    allocator_set_checksum(chunk->next);
+    allocator_set_checksum(chunk);
 }
 
 void *kmalloc(uint32_t size) {
@@ -55,10 +86,22 @@ void *kmalloc(uint32_t size) {
     HeapChunk *last_chunk = current_chunk;
 
     while (current_chunk) {
-        if (!current_chunk->in_use && current_chunk->length >= size) {
+        if (!allocator_test_checksum(current_chunk)) {
+            printf("WRONG CHECKSUM FOR CHUNK ");
+            print_u32((uint32_t)current_chunk);
+            printf(" SHOULD BE ");
+            print_u32(allocator_calculate_checksum(current_chunk));
+            printf(" IS = ");
+            print_u32(current_chunk->in_use >> 8);
+            printf("\n");
+        }
+
+        if (!CHUNK_IN_USE(current_chunk) && current_chunk->length >= size) {
             if ((current_chunk->length - size) >= (2 * sizeof(HeapChunk))) {
                 allocator_split_heapchunk(current_chunk, size);
                 current_chunk->in_use = 1;
+
+                allocator_set_checksum(current_chunk);
 
                 heap_meta.allocated += (sizeof(HeapChunk) + size);
 
@@ -72,6 +115,8 @@ void *kmalloc(uint32_t size) {
             // to its memory
             current_chunk->in_use = 1;
             heap_meta.allocated += current_chunk->length;
+
+            allocator_set_checksum(current_chunk);
             return (void*)((char*)current_chunk + sizeof(HeapChunk));
         }
 
@@ -108,7 +153,7 @@ void kfree(void *pointer) {
 
     // coalesce chunks that are adjacent and also free
     if (next_chunk) {
-        if (!next_chunk->in_use) {
+        if (!CHUNK_IN_USE(next_chunk)) {
             next_chunk->last = chunk;
             chunk->next = next_chunk->next;
             chunk->length = next_chunk->length + sizeof(HeapChunk) +
@@ -117,14 +162,16 @@ void kfree(void *pointer) {
         }
     }
     if (last_chunk) {
-        if (!last_chunk->in_use) {
+        if (!CHUNK_IN_USE(last_chunk)) {
             last_chunk->next = chunk->next;
             last_chunk->length = chunk->length + last_chunk->length +
                 sizeof(HeapChunk);
             next_chunk->last = last_chunk;
             heap_meta.allocated -= sizeof(HeapChunk);
+
+            allocator_set_checksum(last_chunk);
         }
     }
 
-    return;
+    allocator_set_checksum(chunk);
 }

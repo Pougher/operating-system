@@ -2,6 +2,8 @@
 #define _CORE_UTIL_H
 
 #include "format.h"
+#include "mem.h"
+#include "registers.h"
 
 // locks the entire kernel by disabling interrupts and halting
 void klock();

@@ -1,6 +1,8 @@
 #ifndef CORE_REGISTERS_H
 #define CORE_REGISTERS_H
 
+#include "format.h"
+
 #include <stdint.h>
 
 typedef struct {
@@ -15,6 +17,16 @@ typedef struct {
 
     // other reigsters
     uint32_t eip, cs, efl, user_esp, ss;
-} Registers;
+} __attribute__((packed)) Registers;
+
+
+// returns the values of all the CPU's registers as a struct, ignoring the
+// int_no and error_no fields, as well as the CRx registers
+void registers_get(Registers*);
+
+// prints the contents of all of the registers as a formatted string
+void registers_print(Registers*);
 
 #endif
+
+// 16 + 32 + 8 + 20 = 76 bytes

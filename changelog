@@ -1,0 +1,13 @@
+Changelog Commit 1
+
+* Added File support (not a filesystem, just a piece of terminology used to
+refer to open channels)
+* Added Heap corruption detection to increase the safety of the Heap
+* Added new write syscall (3)
+* Added more chapters to documentation.md
+* Made memory-map.txt obselete
+* Added changelog
+
+Todo:
+* Add checks to physical memory manager to signal if a given allocation will even fit in memory
+* Add a keyboard driver

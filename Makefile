@@ -11,7 +11,7 @@ CFLAGS = -g -O3 -Wall -pedantic -Wextra -nostdlib -Wno-stringop-overflow
 
 
 os.bin: ${OBJ} boot/boots.o core/gdts.o core/utils.o core/idts.o core/isrs.o \
-	core/syscalls.o
+	core/syscalls.o core/registerss.o
 	${CC} -ffreestanding -nostdlib -T linker.ld -o $@ $^ -lgcc
 	mkdir -p isodir/boot/grub
 	cp os.bin isodir/boot/os.bin
@@ -34,6 +34,9 @@ core/isrs.o: core/isr.s
 	nasm -felf32 $< -o $@
 
 core/syscalls.o: core/syscall.s
+	nasm -felf32 $< -o $@
+
+core/registerss.o: core/registers.s
 	nasm -felf32 $< -o $@
 
 run:
