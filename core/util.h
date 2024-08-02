@@ -5,6 +5,16 @@
 #include "mem.h"
 #include "registers.h"
 
+// sets the bit indicated by value v in variable x
+#define SET_BIT(x, v) ((x) |= (v))
+
+// clears the bit indicated by the value v in variable x
+#define CLEAR_BIT(x, v) ((x) &= (~(v)))
+
+// clears or sets a bit depending on if a value is 0 or 1
+#define SET_BIT_CONDITIONAL(x, v, c) \
+    (x = (x | v) ^ (v & c))
+
 // locks the entire kernel by disabling interrupts and halting
 void klock();
 

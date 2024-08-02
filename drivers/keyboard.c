@@ -1,5 +1,7 @@
 #include "keyboard.h"
 
+static KeyboardState keyboard_state = { 0 };
+
 // translation table for scancodes
 static uint8_t keyboard_layout[2][128] = {
     {
@@ -27,8 +29,15 @@ void keyboard_handler(Registers *registers) {
     uint16_t scancode = port_inb(0x60);
 
     char key = 0;
+    if (KEYBOARD_SCANCODE(scancode) == KEY_LSHIFT) {
+        if (KEY_PRESSED(scancode)) {
+            SET_BIT(keyboard_state.modifiers, KEY_MOD_SHIFT);
+        } else {
+            CLEAR_BIT(keyboard_state.modifiers, KEY_MOD_SHIFT);
+        }
+    }
     if (scancode < 128) {
-        key = keyboard_layout[1][scancode & 0x7f];
+        key = keyboard_layout[keyboard_state.modifiers & KEY_MOD_SHIFT][KEYBOARD_SCANCODE(scancode)];
     }
 
     char s[2] = {key, '\0'};

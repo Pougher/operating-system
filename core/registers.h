@@ -17,7 +17,7 @@ typedef struct {
 
     // other reigsters
     uint32_t eip, cs, efl, user_esp, ss;
-} __attribute__((packed)) Registers;
+} __attribute__((packed, aligned(4))) Registers;
 
 
 // returns the values of all the CPU's registers as a struct, ignoring the
@@ -28,5 +28,3 @@ void registers_get(Registers*);
 void registers_print(Registers*);
 
 #endif
-
-// 16 + 32 + 8 + 20 = 76 bytes
