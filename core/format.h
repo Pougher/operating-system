@@ -48,6 +48,9 @@ void format_add_cursor_x(uint32_t);
 // sets the cursor's x and y coordinates to the values passed to the function
 void format_set_cursor_position(uint32_t, uint32_t);
 
+// writes a single character to the screen
+void putc(char);
+
 // print formatted string. If a string contains an escape character or
 // recognized escape sequence, then it will be output whilst being formatted
 // as such (NOTE: does not support scrolling)

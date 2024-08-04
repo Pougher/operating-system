@@ -8,6 +8,9 @@
 __attribute__((optimize("-fno-tree-loop-distribute-patterns")))
 void memset(void*, int, size_t);
 
+// copies len bytes from src to dst
+void memcpy(void*, void*, size_t);
+
 // calculates the length of a null-terminated string
 size_t strlen(char*);
 

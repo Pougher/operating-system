@@ -139,6 +139,9 @@ void *kmalloc(uint32_t size) {
     last_chunk->length += additional_memory;
     heap_meta.size += additional_memory;
 
+    // recalculate the last chunk's checksum
+    allocator_set_checksum(last_chunk);
+
     return kmalloc(size);
 }
 

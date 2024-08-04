@@ -13,12 +13,18 @@
 
 // clears or sets a bit depending on if a value is 0 or 1
 #define SET_BIT_CONDITIONAL(x, v, c) \
-    (x = (x | v) ^ (v & c))
+    ((x) = ((x) | (v)) ^ (v * !(c)))
+
+// converts a non-boolean quanitity to a boolean value
+#define TO_BOOL(v) (!!(v))
 
 // locks the entire kernel by disabling interrupts and halting
 void klock();
 
 // clears the screen and prints in red a panic message, then locks the kernel
 void kpanic(char*);
+
+// tests whether or not a character is within the english the alphabet
+int isalpha(char);
 
 #endif

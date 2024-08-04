@@ -1,10 +1,13 @@
 #ifndef DRIVERS_KEYBOARD_H
 #define DRIVERS_KEYBOARD_H
 
-#include "../core/registers.h"
+#include <stdbool.h>
+
 #include "driver_base.h"
 
+#include "../core/registers.h"
 #include "../core/util.h"
+#include "../core/file.h"
 
 // for the sake of simplicity, only a P/S2 Keyboard will be supported for now
 #define PS2_DATA    0x60
@@ -53,6 +56,11 @@
 #define KEY_RELEASE     0x80
 
 #define KEY_MOD_SHIFT   0x0001
+#define KEY_MOD_CAPS    0x0002
+#define KEY_MOD_CTRL    0x0004
+#define KEY_MOD_ALT     0x0008
+#define KEY_MOD_NLOCK   0x0010
+#define KEY_MOD_SLOCK   0x0020
 
 // function like macro to convert a given value into a keyboard scancode
 #define KEYBOARD_SCANCODE(x) ((x) & 0x7f)
@@ -65,7 +73,16 @@
 // struct that contains data indicating the current state of the keyboard, such
 // as pressed keys and modifiers
 typedef struct {
+    // array that holds the currently pressed keys
+    bool keys[128];
+
+    // currently active modifiers, such as shift and caps lock
     uint16_t modifiers;
+
+    // how many times caps lock has been detected as being pressed, resets when
+    // the counter reaches 2 to indicate that caps lock has been pressed a
+    // second time (disabled)
+    uint8_t caps_lock;
 } KeyboardState;
 
 // called whenever a keyboard event is recieved from the PIC

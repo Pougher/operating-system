@@ -23,6 +23,13 @@ void format_set_cursor_position(uint32_t x, uint32_t y) {
     _format_state.cursor_y = y;
 }
 
+void putc(char c) {
+    char char_string[2] = { c, '\0' };
+    _FORMAT_OUTPUT_TEXT(char_string);
+
+    format_add_cursor_x(1);
+}
+
 void printf(char *format) {
     const size_t format_length = strlen(format);
 

@@ -25,21 +25,74 @@ static uint8_t keyboard_layout[2][128] = {
     }
 };
 
+static inline char keyboard_scancode_to_char(uint8_t scancode) {
+    bool shift = TO_BOOL(keyboard_state.modifiers & KEY_MOD_SHIFT);
+    bool capslock = TO_BOOL(keyboard_state.modifiers & KEY_MOD_CAPS);
+
+    char character = keyboard_layout[shift][scancode];
+
+    if (capslock) {
+        character = keyboard_layout[(1 & isalpha(character)) | shift][scancode];
+    }
+
+    return character;
+}
+
 void keyboard_handler(Registers *registers) {
+    (void) registers;
+
     uint16_t scancode = port_inb(0x60);
+    uint8_t keyboard_scancode = KEYBOARD_SCANCODE(scancode);
 
     char key = 0;
-    if (KEYBOARD_SCANCODE(scancode) == KEY_LSHIFT) {
-        if (KEY_PRESSED(scancode)) {
-            SET_BIT(keyboard_state.modifiers, KEY_MOD_SHIFT);
-        } else {
-            CLEAR_BIT(keyboard_state.modifiers, KEY_MOD_SHIFT);
-        }
+    if (keyboard_scancode == KEY_LSHIFT || keyboard_scancode == KEY_RSHIFT) {
+        SET_BIT_CONDITIONAL(
+            keyboard_state.modifiers,
+            KEY_MOD_SHIFT,
+            KEY_PRESSED(scancode)
+        );
+    } else if (keyboard_scancode == KEY_LALT || keyboard_scancode == KEY_RALT) {
+        SET_BIT_CONDITIONAL(
+            keyboard_state.modifiers,
+            KEY_MOD_ALT,
+            KEY_PRESSED(scancode)
+        );
+    } else if (
+        keyboard_scancode == KEY_LCTRL || keyboard_scancode == KEY_RCTRL) {
+        SET_BIT_CONDITIONAL(
+            keyboard_state.modifiers,
+            KEY_MOD_CTRL,
+            KEY_PRESSED(scancode)
+        );
+    } else if (keyboard_scancode == KEY_NUM_LOCK) {
+        SET_BIT_CONDITIONAL(
+            keyboard_state.modifiers,
+            KEY_MOD_NLOCK,
+            KEY_PRESSED(scancode)
+        );
+    } else if (keyboard_scancode == KEY_SCROLL_LOCK) {
+        SET_BIT_CONDITIONAL(
+            keyboard_state.modifiers,
+            KEY_MOD_NLOCK,
+            KEY_PRESSED(scancode)
+        );
+    } else if (keyboard_scancode == KEY_CAPS_LOCK) {
+        keyboard_state.caps_lock = (keyboard_state.caps_lock + 1) % 4;
+
+        SET_BIT_CONDITIONAL(
+            keyboard_state.modifiers,
+            KEY_MOD_CAPS,
+            keyboard_state.caps_lock == 2
+        );
     }
-    if (scancode < 128) {
-        key = keyboard_layout[keyboard_state.modifiers & KEY_MOD_SHIFT][KEYBOARD_SCANCODE(scancode)];
+    else if (scancode < 128) {
+        key = keyboard_scancode_to_char(keyboard_scancode);
+        file_write_char(stdin, key);
+        char buffer[2] = { 0 };
+        file_read(stdin, buffer, 1);
+        printf(buffer);
     }
 
-    char s[2] = {key, '\0'};
-    printf(s);
+    // update the key's status in the keys array
+    keyboard_state.keys[(scancode & 0x7f)] = KEY_PRESSED(scancode);
 }

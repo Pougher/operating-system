@@ -1,13 +1,17 @@
 Changelog Commit 1
 
+* Added stdin file stream with minimal support from the keyboard driver
 * Added File support (not a filesystem, just a piece of terminology used to
 refer to open channels)
 * Added Heap corruption detection to increase the safety of the Heap
 * Added new write syscall (3)
 * Added more chapters to documentation.md
 * Made memory-map.txt obselete
+* Created font editor (helper_scripts/font_editor.py)
+* Created new C64 font for the operating system
 * Added changelog
 
 Todo:
-* Add checks to physical memory manager to signal if a given allocation will even fit in memory
-* Add a keyboard driver
+* Add checks to physical memory manager to signal if a given allocation will
+  even fit in memory
+* Upgrade keyboard driver
