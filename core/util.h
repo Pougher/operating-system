@@ -4,6 +4,7 @@
 #include "format.h"
 #include "mem.h"
 #include "registers.h"
+#include "asm_utils.h"
 
 // sets the bit indicated by value v in variable x
 #define SET_BIT(x, v) ((x) |= (v))
@@ -26,5 +27,9 @@ void kpanic(char*);
 
 // tests whether or not a character is within the english the alphabet
 int isalpha(char);
+
+// returns an unsigned 32 bit integer from a character array (reads 4 bytes as
+// a single uint32_t, does not care about alignment)
+uint32_t get_u32(char*);
 
 #endif

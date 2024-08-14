@@ -23,15 +23,15 @@ static inline File *file_descriptor_valid(FileDescriptor descriptor) {
 }
 
 void file_init() {
-    stdout = file_create(NULL, stdout_write, NULL);
-    stdin  = file_create(stdin_init, stdin_write, stdin_read);
-    stderr = file_create(NULL, stdout_write, NULL);
+    stdout = file_create(NULL, stdout_write, NULL, NULL);
+    stdin  = file_create(stdin_init, stdin_write, stdin_read, stdin_close);
 }
 
-int32_t file_create(
+FileDescriptor file_create(
     FileInitFunc init_function,
     FileWriteFunc write_function,
-    FileReadFunc read_function) {
+    FileReadFunc read_function,
+    FileCloseFunc close_function) {
     // firstly, search for an unopened file
     File *file = NULL;
     uint16_t i;
@@ -51,7 +51,13 @@ int32_t file_create(
 
     // since we have found an unopened file, we can go ahead and declare the
     // file as opened with the parameters specified
-    file_declare(file, init_function, write_function, read_function);
+    file_declare(
+        file,
+        init_function,
+        write_function,
+        read_function,
+        close_function
+    );
 
     // since the file has now been completely set up, we can call the
     // initialization function
@@ -67,6 +73,9 @@ int32_t file_delete(FileDescriptor descriptor) {
     if (!(file = file_descriptor_valid(descriptor))) {
         return FILE_INVALID;
     }
+    if (file->close_function) {
+        file->close_function(file);
+    }
 
     files[descriptor].is_open = false;
     return FILE_SUCCESS;
@@ -76,11 +85,13 @@ void file_declare(
     File *fp,
     FileInitFunc init_function,
     FileWriteFunc write_function,
-    FileReadFunc read_function) {
+    FileReadFunc read_function,
+    FileCloseFunc close_function) {
     fp->file_pointer = 0;
     fp->init_function = init_function;
     fp->write_function = write_function;
     fp->read_function = read_function;
+    fp->close_function = close_function;
     fp->is_open = true;
 }
 
@@ -89,7 +100,7 @@ int32_t file_write(FileDescriptor descriptor, char *bytes, uint32_t length) {
     if (!(file = file_descriptor_valid(descriptor))) {
         return FILE_INVALID;
     }
-    
+
     if (file->write_function) {
         file->write_function(file, bytes, length);
     }
@@ -117,10 +128,22 @@ int32_t file_write_char(FileDescriptor descriptor, char c) {
     }
 
     char byte_string[2] = { c, '\0' };
-    
+
     if (file->write_function) {
         file->write_function(file, byte_string, 1);
     }
 
     return FILE_SUCCESS;
+}
+
+void *file_get_buffer(File *file) {
+    return file->state;
+}
+
+uint32_t file_get_pointer(File *file) {
+    return file->file_pointer;
+}
+
+File *file_descriptor_to_pointer(FileDescriptor descriptor) {
+    return &files[descriptor];
 }

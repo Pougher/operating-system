@@ -61,3 +61,7 @@ void stdin_read(File *stdin_file, void *object, uint32_t length) {
 
     stdin_file->file_pointer -= length;
 }
+
+void stdin_close(File *stdin_file) {
+    kfree(stdin_file->state);
+}

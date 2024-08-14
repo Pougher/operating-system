@@ -11,7 +11,8 @@
 
 // maps a region of physical memory to a virtual address with a specific size
 // (the number of bytes that region of memory consists of), and returns the
-// virtual address as a pointer
+// virtual address as a pointer. The granularity of virtual memory mapping is
+// 4096 bytes
 void *vmm_map_memory(page_aligned_ptr, uint32_t);
 
 // marks a region of virtual memory as being unmapped

@@ -1,7 +1,7 @@
 #include "physical_memory_manager.h"
 #include "paging.h"
 
-PhysicalMemoryManager pmm;
+PhysicalMemoryManager pmm = { 0 };
 
 void pmm_init() {
     pmm_allocate_bitmap();
@@ -9,9 +9,6 @@ void pmm_init() {
 }
 
 void pmm_find_usable_memory(multiboot_info_t *mbi) {
-    pmm.memory_base = 0;
-    pmm.mb_size = 0;
-
     union {
         multiboot_uint64_t in;
         uint8_t *out;
@@ -48,9 +45,8 @@ void pmm_find_usable_memory(multiboot_info_t *mbi) {
     }
 
     if (pmm.memory_base == 0) {
-        printf("\x8c""FATAL: Failed to locate contiguous RAM segment above "
-               "0x00100000 (1MiB)\n");
-        klock();
+        kpanic("FATAL: Failed to locate contiguous RAM segment above "
+               "0x00100000 (1MiB)");
     }
 
     if ((uint32_t)pmm.memory_base % 0x400000 != 0) {
@@ -66,8 +62,7 @@ void pmm_find_usable_memory(multiboot_info_t *mbi) {
     // check if there is enough space for the pagetable data (pagetable data
     // takes up ~4MiB)
     if (pmm.mb_size < 0xF00000) {
-        printf("\x8c""FATAL: Not enough space for pagetable data in RAM");
-        klock();
+        kpanic("FATAL: Not enough space for pagetable data in RAM");
     }
 }
 
@@ -104,8 +99,10 @@ void pmm_init_bitmap() {
     // 131072 / 4 = 32768
     memset(pmm.free_pages, 0xff, PMM_BITMAP_SIZE * 4);
 
-    // mark the memory base region as free for use
-    pmm_mark_region_free(pmm.memory_base, pmm.mb_size);
+    // mark the memory base region as free for use, minus 4 MiB which is
+    // allocated for the internal memory bitmap
+    pmm.allocated_memory += (pmm.mb_size - (PAGE_SIZE * 1024));
+    pmm_mark_region_free(pmm.memory_base, pmm.mb_size - (PAGE_SIZE * 1024));
 }
 
 void *pmm_request_page() {
@@ -126,6 +123,7 @@ void *pmm_request_page() {
             pmm.free_pages[i] |= (1 << zero_index);
 
             uint32_t addr = (zero_index * PAGE_SIZE) + (i * PAGE_SIZE * 32);
+            pmm.allocated_memory += PAGE_SIZE;
             return (void*)addr;
         }
     }
@@ -141,6 +139,8 @@ void pmm_free_page(page_aligned_ptr page) {
     // clears the page bit (sets it to 0) to indicate a free page
     pmm.free_pages[pg >> 5] =
         pmm.free_pages[pg >> 5] & ~((uint32_t)1 << (pg % 32));
+
+    pmm.allocated_memory -= PAGE_SIZE;
 }
 
 void pmm_mark_region_free(page_aligned_ptr dst, uint32_t length) {
@@ -155,6 +155,8 @@ void pmm_mark_region_free(page_aligned_ptr dst, uint32_t length) {
     // at the end_index
     uint32_t start_bit_offset = page_number % 32;
     uint32_t end_bit_offset = page_end % 32;
+
+    pmm.allocated_memory -= length;
 
     if (start_index == end_index) {
         pmm.free_pages[start_index] = (UINT32_MAX >> (32 - start_bit_offset)) |
@@ -174,6 +176,14 @@ void pmm_mark_region_free(page_aligned_ptr dst, uint32_t length) {
     for (uint32_t i = start_index; i < end_index; i++) {
         pmm.free_pages[i] = 0x00;
     }
+}
+
+bool pmm_fits_in_memory(uint32_t size) {
+    return (pmm.allocated_memory + size) < pmm.mb_size;
+}
+
+uint32_t pmm_get_total_memory() {
+    return pmm.mb_size;
 }
 
 uint32_t pmm_read_cr3() {

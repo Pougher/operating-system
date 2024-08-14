@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "multiboot.h"
 #include "format.h"
@@ -23,6 +24,9 @@ typedef struct {
 
     // memory base size in bytes (how large the memory base is)
     size_t mb_size;
+
+    // the total currently allocated memory
+    uint32_t allocated_memory;
 } PhysicalMemoryManager;
 
 extern PhysicalMemoryManager pmm;
@@ -54,6 +58,12 @@ void *pmm_request_page();
 
 // marks the physical address of a page in RAM as free
 void pmm_free_page(void*);
+
+// tests if a given amount of memory when requested will fit in memory
+bool pmm_fits_in_memory(uint32_t);
+
+// returns the total memory size of the system in bytes
+uint32_t pmm_get_total_memory();
 
 // reads the cr3 paging register into a u32
 uint32_t pmm_read_cr3();

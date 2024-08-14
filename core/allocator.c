@@ -79,6 +79,13 @@ void allocator_split_heapchunk(HeapChunk *chunk, uint32_t size) {
 }
 
 void *kmalloc(uint32_t size) {
+    // unlike many implementations of libc malloc, this malloc does not work on
+    // 0 size allocations, and if a 0 size allocation is requested, then a NULL
+    // pointer is returned
+    if (size == 0) {
+        return NULL;
+    }
+
     // first, round size up to the nearest multiple of 16
     if (size % 16 != 0) size = (size | 15) + 1;
 
@@ -146,6 +153,11 @@ void *kmalloc(uint32_t size) {
 }
 
 void kfree(void *pointer) {
+    // NULL pointers do nothing, so simply return
+    if (pointer == NULL) {
+        return;
+    }
+
     HeapChunk *chunk = HEAPCHUNK((char*)pointer - sizeof(HeapChunk));
     HeapChunk *next_chunk = chunk->next;
     HeapChunk *last_chunk = chunk->last;

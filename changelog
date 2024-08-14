@@ -1,13 +1,33 @@
+Changelog Commit 2
+
+* Added filesystem building script (scripts/buildfilesystem.py)
+* Began work on kernel filesystem (KERNFS)
+* Barely added rudimentary process loading (its horrible)
+* Added check to physical memory manager to signal if a given allocation will
+  even fit in memory
+* Began work on ELF format reader
+* Began work on minimum requirements check
+* Updated documentation stack section
+
+Todo:
+* Add error reporting (eg. ELF file read fails, error code 27 is put in err),
+  this could then be checked with something like geterr() and seterr(), and
+  would also reduce the amount of kernel panics, giving more control to the
+  programmer
+* Add filesystem
+* Upgrade keyboard driver
+
 Changelog Commit 1
 
+* Changed name of scripts directory from 'helper_scripts' to 'scripts'
 * Added stdin file stream with minimal support from the keyboard driver
 * Added File support (not a filesystem, just a piece of terminology used to
-refer to open channels)
+  refer to open channels)
 * Added Heap corruption detection to increase the safety of the Heap
 * Added new write syscall (3)
 * Added more chapters to documentation.md
 * Made memory-map.txt obselete
-* Created font editor (helper_scripts/font_editor.py)
+* Created font editor (scripts/font_editor.py)
 * Created new C64 font for the operating system
 * Added changelog
 

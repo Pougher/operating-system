@@ -29,7 +29,7 @@ void syscall_handler(Registers *registers) {
 void syscall_init() {
     isr_register_handler(SYSCALL_INT_NUMBER, syscall_handler);
 
-    system_call_table[0] = SYSCALL_GET(0);
-    system_call_table[1] = SYSCALL_GET(1);
-    system_call_table[2] = SYSCALL_GET(2);
+    SYSCALL_SET(0);
+    SYSCALL_SET(1);
+    SYSCALL_SET(2);
 }

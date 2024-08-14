@@ -27,3 +27,25 @@ size_t strlen(char *string) {
     while (string[i]) { i++; }
     return i;
 }
+
+uint32_t strncmp(char *str1, char *str2, size_t length) {
+    while (length && *str1 && (*str1 == *str2)) {
+        str1++;
+        str2++;
+        length--;
+    }
+
+    if (length == 0) {
+        return 0;
+    }
+
+    return (*str1 - *str2);
+}
+
+uint32_t strcmp(char *str1, char *str2) {
+    while(*str1 && (*str1 == *str2)) {
+        str1++;
+        str2++;
+    }
+    return *(unsigned char*)str1 - *(unsigned char*)str2;
+}

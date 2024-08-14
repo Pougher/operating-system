@@ -70,7 +70,7 @@ syscall3:
 
     ; write the third and final operand to its respective memory address
     mov eax, [esp + 16]
-    mov [syscall_op_2], eax
+    mov [syscall_op_3], eax
 
     int 0x40
 

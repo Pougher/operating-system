@@ -2,6 +2,9 @@
 
 void *vmm_map_memory(page_aligned_ptr virtual_address, uint32_t length) {
     if (length == 0) return NULL;
+    if (!pmm_fits_in_memory(length)) {
+        return NULL;
+    }
 
     // temporary variable that is incremented every time a page boundary is
     // crossed
@@ -37,9 +40,8 @@ void *vmm_map_memory(page_aligned_ptr virtual_address, uint32_t length) {
         uint32_t page_physical = (uint32_t)pmm_request_page();
 
         if ((void*)page_physical == NULL) {
-            // unmap all of the memory allocated by this vmap call since it
-            // failed to find all of the required memory
-            vmm_unmap_memory(virtual_address, (page_offset * PAGE_SIZE) - i);
+            // this means something catastrophic has happened, since reaching
+            // this control path is normally impossible
             return NULL;
         }
 

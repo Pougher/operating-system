@@ -359,6 +359,21 @@ class CharacterEditor:
         self.hud.draw()
         self.commandline.draw()
 
+        character_x = (self.current_char % 8) * 8 * self.hud.scale
+        character_y = (self.current_char // 8) * 8 * self.hud.scale
+
+        pygame.draw.rect(
+            surface,
+            WHITE,
+            pygame.Rect(
+                self.hud.x + character_x,
+                self.hud.y + character_y,
+                9 * self.hud.scale,
+                9 * self.hud.scale
+            ),
+            width = 2
+        )
+
 
 # functions
 

@@ -14,4 +14,11 @@ void memcpy(void*, void*, size_t);
 // calculates the length of a null-terminated string
 size_t strlen(char*);
 
+// compares two strings bounded by a specific number of bytes to check. If the
+// strings are equal, then 0 is returned.
+uint32_t strncmp(char*, char*, uint32_t);
+
+// compares two strings, if the strings are equal then 0 is returned
+uint32_t strcmp(char*, char*);
+
 #endif

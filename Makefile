@@ -7,46 +7,65 @@ QEMU = qemu-system-x86_64
 
 CC = i686-elf-gcc
 GDB = i686-elf-gdb
-CFLAGS = -g -O3 -Wall -pedantic -Wextra -nostdlib -Wno-stringop-overflow
+GNUAS=i686-elf-as
+LD=i686-elf-ld
+AS=nasm
+CFLAGS = -g -Wall -pedantic -Wextra -nostdlib -Wno-stringop-overflow
 
-
-os.bin: ${OBJ} boot/boots.o core/gdts.o core/utils.o core/idts.o core/isrs.o \
-	core/syscalls.o core/registerss.o
-	${CC} -ffreestanding -nostdlib -T linker.ld -o $@ $^ -lgcc
+os.iso: os.bin shell/shell.elf filesystem
 	mkdir -p isodir/boot/grub
+	mkdir -p isodir/modules
 	cp os.bin isodir/boot/os.bin
 	cp grub/grub.cfg isodir/boot/grub/grub.cfg
+	cp filesystem/filesystem isodir/modules
 	grub-mkrescue -o os.iso isodir
 
+os.bin: ${OBJ} boot/boots.o core/gdts.o core/idts.o core/isrs.o \
+	core/syscalls.o core/registerss.o core/asm_utilss.o core/stacks.o
+	${CC} -ffreestanding -nostdlib -T linker.ld -o $@ $^ -lgcc
+
 boot/boots.o: boot/boot.s
-	i686-elf-as $^ -o $@
+	${GNUAS} $^ -o $@
 
 core/gdts.o: core/gdt.s
-	nasm -felf32 $< -o $@
-
-core/utils.o: core/util.s
-	nasm -felf32 $< -o $@
+	${AS} -felf32 $< -o $@
 
 core/idts.o: core/idt.s
-	nasm -felf32 $< -o $@
+	${AS} -felf32 $< -o $@
 
 core/isrs.o: core/isr.s
-	nasm -felf32 $< -o $@
+	${AS} -felf32 $< -o $@
 
 core/syscalls.o: core/syscall.s
-	nasm -felf32 $< -o $@
+	${AS} -felf32 $< -o $@
 
 core/registerss.o: core/registers.s
-	nasm -felf32 $< -o $@
+	${AS} -felf32 $< -o $@
+
+core/asm_utilss.o: core/asm_utils.s
+	${AS} -felf32 $< -o $@
+
+core/stacks.o: core/stack.s
+	${AS} -felf32 $< -o $@
 
 run:
-	${QEMU} -m 988M -cdrom os.iso -monitor stdio
+	${QEMU} -m 64M -cdrom os.iso -monitor stdio
+
+filesystem:
+	mkdir -p filesystem
+	cp shell/*.elf filesystem
+	python3 scripts/buildfilesystem.py
+
+shell/shell.elf: shell/shell.s
+	${AS} -felf32 $< -o shell/shell.o
+	${LD} shell/shell.o -o shell/shell.elf -Ttext=0x100000
 
 %.o: %.c ${HEADERS}
 	${CC} ${CFLAGS} -ffreestanding -c $< -o $@
 
 clean:
 	rm -rf *.bin *.dis *.o os-image.bin *.elf
+	rm -rf filesystem
 	rm -rf kernel/*.o boot/*.bin drivers/*.o boot/*.o core/*.o font/*.o \
-	core/sys/*.o
+	core/sys/*.o shell/*.o shell/*.elf
 	rm os.iso

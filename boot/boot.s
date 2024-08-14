@@ -35,6 +35,7 @@ boot_page_table1:
 # page table 2 maps all of the page tables into RAM from 0xC0400000-0xC0800000
 boot_page_table2:
     .skip 4096
+
 # Further page tables may be required if the kernel grows beyond 4 MiB.
 
 # The kernel entry point.
@@ -56,7 +57,6 @@ _start:
     # 1007th will be the multiboot header
 #	movl $1007, %ecx
 
-#1:
 	# Only map the kernel.
 #	cmpl $_kernel_start, %esi
 #	jl 2f
@@ -69,8 +69,7 @@ _start:
 #	orl $0x003, %edx
 #	movl %edx, (%edi)
 #
-#2:
-	# Size of page is 4096 bytes.
+    # Size of page is 4096 bytes.
 #	addl $4096, %esi
 	# Size of entries in boot_page_table1 is 4 bytes.
 #	addl $4, %edt
@@ -130,11 +129,12 @@ page_set_loop:
     cli
 	# Set up the stack.
 	mov $stack_top, %esp
+    movl $0x0, %ebp
 
 	# Enter the high-level kernel, with the multiboot header passed as an
     # argument in the EBX register
     addl $0xC0000000, %ebx
-    push %ebx
+    pushl %ebx
     pushl $(boot_page_table2)
 	call kernel_main
 

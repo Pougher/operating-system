@@ -9,11 +9,20 @@
 #include "../core/isr.h"
 #include "../core/syscall.h"
 #include "../core/file.h"
+#include "../core/mb_module.h"
+#include "../core/kernfs.h"
+#include "../core/process.h"
+#include "../core/stack.h"
+#include "../core/elf.h"
 
 #include "../drivers/vga.h"
 #include "../drivers/pic.h"
 
-void kernel_init(Pagetable *pagetable, multiboot_info_t *mbi) {
+static Pagetable *pagetable;
+static multiboot_info_t *mbi;
+
+// initialization of lower level kernel functions (gdt, drivers, etc.)
+void kernel_init_low_level() {
     // updates the global descriptor table to set up the permissions for
     // different segments of memory
     gdt_install_gdt();
@@ -43,12 +52,37 @@ void kernel_init(Pagetable *pagetable, multiboot_info_t *mbi) {
     idt_init();
     isr_init();
     idt_begin();
+}
 
+// the stack allocation must be its own function since we dont want to clobber
+// any variables we may need
+void kernel_stack_relocate() {
+    // allocate the new stack
+    stack_relocate();
+}
+
+// initialization for higher level kernel functions
+void kernel_init_high_level() {
     // initializes the file module and initializes stdio
     file_init();
 
     // initialize the system call interface
     syscall_init();
+
+    // initialize the kernel-level filesystem
+    multiboot_module_t *filesystem_root = module_get(mbi, KERNFS_ROOT_INDEX);
+    kernfs_init(filesystem_root);
+
+    // initialize process execution module
+    process_init();
+}
+
+// checks the minimum requirements of the operating system versus the hardware
+// present in the system that it is being run on
+void kernel_check_minimum_requirements() {
+    if (pmm_get_total_memory() < KERNEL_MINIMUM_RAM) {
+        kpanic("Minimum requirements not met: Not enough RAM (<32MiB)");
+    }
 }
 
 void dump_mem(char *mem, size_t length) {
@@ -59,11 +93,27 @@ void dump_mem(char *mem, size_t length) {
     }
 }
 
-void kernel_main(unsigned int boot_page_2, unsigned int ebx) {
-    multiboot_info_t *mbinfo = (multiboot_info_t*)ebx;
-    Pagetable *pagetable = (Pagetable*)boot_page_2;
+void shell_load() {
+    File *f = kernfs_open("shell.elf");
+    ELF32 shell;
+    elf_read(file_get_buffer(f), &shell);
+}
 
-    kernel_init(pagetable, mbinfo);
+void kernel_main(unsigned int boot_page_2, unsigned int ebx) {
+    mbi = (multiboot_info_t*)ebx;
+    pagetable = (Pagetable*)boot_page_2;
+
+    kernel_init_low_level();
+    kernel_stack_relocate();
+    kernel_init_high_level();
+
+    kernel_check_minimum_requirements();
+
+    shell_load();
+    //while (1) {}
+
+    //process_spawn(f);
+    //printf("Loaded process!\n");
 
     //printf("\x88\x9c""FATAL EXCEPTION: Page fault (0x0000000D)");
     //printf("\x88\x9c""\n%esp = 0xC00D198E");
