@@ -8,12 +8,13 @@ Changelog Commit 2
 * Began work on ELF format reader
 * Began work on minimum requirements check
 * Updated documentation stack section
+* Added rudimentary ELF loader
 
 Todo:
 * Add error reporting (eg. ELF file read fails, error code 27 is put in err),
   this could then be checked with something like geterr() and seterr(), and
   would also reduce the amount of kernel panics, giving more control to the
-  programmer
+  programmer (or include some form of better error handling)
 * Add filesystem
 * Upgrade keyboard driver
 

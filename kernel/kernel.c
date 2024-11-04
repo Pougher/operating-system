@@ -97,6 +97,9 @@ void shell_load() {
     File *f = kernfs_open("shell.elf");
     ELF32 shell;
     elf_read(file_get_buffer(f), &shell);
+    //print_u32(shell.section_headers[1].sh_size);
+    process_spawn(&shell, file_get_buffer(f));
+    elf_close(&shell);
 }
 
 void kernel_main(unsigned int boot_page_2, unsigned int ebx) {

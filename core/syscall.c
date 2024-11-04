@@ -32,4 +32,6 @@ void syscall_init() {
     SYSCALL_SET(0);
     SYSCALL_SET(1);
     SYSCALL_SET(2);
+    SYSCALL_SET(3);
+    SYSCALL_SET(4);
 }

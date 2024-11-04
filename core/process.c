@@ -16,7 +16,7 @@ void process_init() {
     }
 }
 
-uint32_t process_spawn(File *program) {
+uint32_t process_raw_spawn(File *program) {
     char *executable = file_get_buffer(program);
     uint32_t executable_length = file_get_pointer(program);
 
@@ -29,6 +29,24 @@ uint32_t process_spawn(File *program) {
     // finally, jump to the executable
     asm_call((uint32_t)PROCESS_BASE_POINTER);
 
-    printf("WE R OK");
+    // TODO: Return PID
+    return 0;
+}
+
+uint32_t process_spawn(ELF32* elf, char *file) {
+    for (uint32_t i = 0; i < elf->header.section_header_num; i++) {
+        if (elf->section_headers[i].sh_type == ELF_SHT_PROGBITS) {
+            char *location = vmm_map_memory(
+                (page_aligned_ptr)elf->header.entry,
+                4096
+            );
+            memcpy(
+                (uint8_t*)elf->header.entry,
+                file + elf->section_headers[i].sh_offset,
+                elf->section_headers[i].sh_size
+            );
+        }
+    }
+    asm_call(0x100000);
     return 0;
 }

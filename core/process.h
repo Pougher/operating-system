@@ -5,6 +5,7 @@
 #include "file.h"
 #include "asm_utils.h"
 #include "util.h"
+#include "elf.h"
 
 // the base pointer for all processes - all processes are virtually mapped to
 // this index
@@ -37,7 +38,10 @@ typedef struct {
 // initializes the process structure
 void process_init();
 
-// spawns a process from a given file, and returns a process ID
-uint32_t process_spawn(File*);
+// spawns a process from a file by directly placing its bytes in memory and
+// jumping to them
+uint32_t process_raw_spawn(File*);
 
+// spawns a process from a given ELF file
+uint32_t process_spawn(ELF32*, char*);
 #endif

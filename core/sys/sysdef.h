@@ -3,5 +3,6 @@
 
 #include "sys_util.h"
 #include "sys_mem.h"
+#include "sys_file.h"
 
 #endif

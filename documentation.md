@@ -432,11 +432,11 @@ Finally, x86 also has something called on offset, which put simply is a value th
 For the assembly used in this documentation, additions or subtractions to the register come outside of the brackets as either a positive or negative number. On the inside of the brackets, if an addition is taking place between two registers then will be written as `%xxx + %yyy`. If a multiplication on a register is taking place then it will be written as `%xxx * %yyy`. Some examples of how offsets are written can be found below:
 ```asm
             ; value at address %esp-8 is put in register eax
-            mov -8(%esp), %eax 
+            movl -8(%esp), %eax 
             ; value at address (%ecx * %edx) - 8 is put into eax
-            mov -8(%ecx * %edx), %eax
+            movl -8(%ecx * %edx), %eax
             ; value at address (%eax + (%edx * 8)) + 4 is put into eax
-            mov 4(%eax + %edx * 8), %eax
+            movl 4(%eax + %edx * 8), %eax
 ```
 
 ### Glossary

@@ -22,7 +22,28 @@ void elf_read(char *data, ELF32 *elf_file) {
         return;
     }
 
-    // allocate enough memory for all the ELF headers
+    elf_load_headers(data, elf_file);
+}
+
+void elf_load_headers(char *data, ELF32 *elf_file) {
+    // the size of the program and section headers in bytes
+    const uint32_t program_header_size =
+        elf_file->header.program_header_num * sizeof(ELFProgramHeader);
+    const uint32_t section_header_size =
+        elf_file->header.section_header_num * sizeof(ELFSectionHeader);
+
+    elf_file->program_headers = kmalloc(program_header_size);
+    elf_file->section_headers = kmalloc(section_header_size);
+    memcpy(
+        elf_file->program_headers,
+        data + elf_file->header.program_header_offset,
+        program_header_size
+    );
+    memcpy(
+        elf_file->section_headers,
+        data + elf_file->header.section_header_offset,
+        section_header_size
+    );
 }
 
 void elf_close(ELF32 *elf) {

@@ -54,7 +54,7 @@
 #define SYSCALL_GET(n) _syscall##n
 
 // adds the specified system call to the system call table
-#defien SYSCALL_SET(n) system_call_table[n] = _syscall##n
+#define SYSCALL_SET(n) system_call_table[n] = _syscall##n
 
 // generates a system call return statement
 #define SYSCALL_RETURN(x) \
