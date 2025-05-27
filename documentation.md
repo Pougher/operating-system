@@ -236,7 +236,7 @@ The following functions are provieded by the allocator to the kernel, and are ac
 
 ### Streams And Files
 
-Similarly to many *nix operating systems, racoon has a similar way of loading things using files. Put simply, a file simply represents an area of memory that can be either written to or read from, and have its state be mutated in some way. Files contrary to common belief do not have to correspond to physical files on a disk somewhere, and are simply virtual constructs that refer to a piece of information stored in memory. In this way, a file can be thought of as a "stream" where information can be "streamed" out of the file and likewise can be "streamed" into the file.
+Similarly to many *nix operating systems, OS has a similar way of loading things using files. Put simply, a file simply represents an area of memory that can be either written to or read from, and have its state be mutated in some way. Files contrary to common belief do not have to correspond to physical files on a disk somewhere, and are simply virtual constructs that refer to a piece of information stored in memory. In this way, a file can be thought of as a "stream" where information can be "streamed" out of the file and likewise can be "streamed" into the file.
 
 _**The strucutre of a file**_
 
@@ -307,7 +307,7 @@ A system call refers to a number and an interrupt, where the interrupt triggers 
 
 _**API**_
 
-The system call API for racoon is relatively simple - 4 memory addresses correspond to the parameters and number of any given system call. These addresses are the following:
+The system call API for OS is relatively simple - 4 memory addresses correspond to the parameters and number of any given system call. These addresses are the following:
 
 * 0xC0BFFFF0: 32-Bit system call number
 * 0xC0BFFFF4: 32-Bit system call operand number 1
@@ -340,9 +340,9 @@ _**Defining System Calls**_
 
 _This is for kernel development only, but the implementation details may be useful for user applications_
 
-In order to define a system call, you first need to write a system call _handler_. A handler is simply the piece of code that is executed when the system call is called, and racoon provides a few utilities to assist in writing handlers, namely the `SYSCALL_DEFINEn(number, ...)` macros, where _n_ represents the number of arugments that the system call takes. Every one of these macros expects at least one argument representing the system call number that the handler corresponds to. Furthermore, these macros are used to define functions, so the arguments named in the macro represent the actual names of the arguments in the defined handler (other than the first, which is actually consumed by the macro). Lastly, the macros only define the function signature, so a pair of curly braces to begin the function body are required after the macro.
+In order to define a system call, you first need to write a system call _handler_. A handler is simply the piece of code that is executed when the system call is called, and OS provides a few utilities to assist in writing handlers, namely the `SYSCALL_DEFINEn(number, ...)` macros, where _n_ represents the number of arugments that the system call takes. Every one of these macros expects at least one argument representing the system call number that the handler corresponds to. Furthermore, these macros are used to define functions, so the arguments named in the macro represent the actual names of the arguments in the defined handler (other than the first, which is actually consumed by the macro). Lastly, the macros only define the function signature, so a pair of curly braces to begin the function body are required after the macro.
 
-`SYSCALL_DEFINEn` macros only ever pass arguments that are the size needed to represent any pointeron the given system, that is on a 32-bit operating system like racoon each argument passed by the macros will be of the type `uint32_t`. This means that in the body of the function, the arguments passed by the define macro will have to be casted to types that the system call handler wishes to operate upon.
+`SYSCALL_DEFINEn` macros only ever pass arguments that are the size needed to represent any pointeron the given system, that is on a 32-bit operating system like OS each argument passed by the macros will be of the type `uint32_t`. This means that in the body of the function, the arguments passed by the define macro will have to be casted to types that the system call handler wishes to operate upon.
 
 When writing system call handlers, you must always return a value. In the case that your handler does not actually _return_ a value, the system call must still set `0xC0BFFFF0` to either a 0 or -1. Returns are performed with the `SYSCALL_RETURN` macro, which writes the value to the afformentioned memory address that you provided. The return values 0 and -1 are also provided as the macros `SYSCALL_SUCCESS` and `SYSCALL_FAILURE` respectively.
 
@@ -393,7 +393,7 @@ System calls also have the benefit of being able to be used anywhere with little
 
 ### Assembly Guide (Documentation Only)
 
-This assembly guide is intended to explain the semantics of the assembly code listings that are provided throughout the documentation, as they differ from the assembly format used in the source code of racoon.
+This assembly guide is intended to explain the semantics of the assembly code listings that are provided throughout the documentation, as they differ from the assembly format used in the source code of OS.
 
 _**Basics**_
 
