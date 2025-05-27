@@ -16,7 +16,7 @@ size_t strlen(char*);
 
 // compares two strings bounded by a specific number of bytes to check. If the
 // strings are equal, then 0 is returned.
-uint32_t strncmp(char*, char*, uint32_t);
+uint32_t strncmp(char*, char*, size_t);
 
 // compares two strings, if the strings are equal then 0 is returned
 uint32_t strcmp(char*, char*);

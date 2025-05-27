@@ -1,6 +1,6 @@
 <span style="font-family: Times">
 
-# Racoon 0.0.1 Manual
+# OS 0.0.1 Manual
 
 ### Table Of Contents
 I. [Design Philosophy](#design-philosophy)
@@ -25,9 +25,9 @@ This methodology means that the user can truly have full control over their expe
 
 It may also appear strange to create an operating system without any security features, however the idea is that any person who uses the operating system knows what they are doing and will not install random software without first checking it for malicious code. In addition to this, any code that you decide to write could have a detrimental impact on the functioning of the system if you decide to write code that either causes undefined behaviour (UB) or overwrites any integral system data.
 
-It is for this reason then that Racoon can be thought of as an axe - you can cut down trees with it by swinging it, but if you swing too hard you can break the axe or cause the tree to fall at an inopportune time, crushing you. You must practice steady hand control and spacial awareness whilst wielding the axe, much like what you have to do with the operating system itself.
+It is for this reason then that OS can be thought of as an axe - you can cut down trees with it by swinging it, but if you swing too hard you can break the axe or cause the tree to fall at an inopportune time, crushing you. You must practice steady hand control and spacial awareness whilst wielding the axe, much like what you have to do with the operating system itself.
 
-On top of this, Racoon also has another core philosophy of simplicity - the entire operating system can be learnt and understood by one single person. This lack of complexity also means that the operating system is more beginner-friendly to programmers who want to get into operating system development for example.
+On top of this, OS also has another core philosophy of simplicity - the entire operating system can be learnt and understood by one single person. This lack of complexity also means that the operating system is more beginner-friendly to programmers who want to get into operating system development for example.
 
 This I also understand may come across as strange, because the operating system is inherently unstable and easy to break, but with enough patience, its infrastructure can be fully learnt and used to its full potential to accomplish any computing tasks you may want to complete.
 
@@ -37,9 +37,9 @@ This can be summarised as the following:
 * Give the user complete control over their computer system, and place absolutely no security restrictions upon the user.
 
 ### System Memory Map
-Upon booting, Racoon sets aside various virtual addresses that are assigned purposes within the kernel. These addresses range from 0xC0000000-0xC1400000 and may not be used by anything other than the kernel. This memory region is approximately all the memory Racoon needs to boot successfully, minus other memory that is needed by applications, such as the heap or the stack.
+Upon booting, OS sets aside various virtual addresses that are assigned purposes within the kernel. These addresses range from 0xC0000000-0xC1400000 and may not be used by anything other than the kernel. This memory region is approximately all the memory OS needs to boot successfully, minus other memory that is needed by applications, such as the heap or the stack.
 
-The Racoon memory map is as follows:
+The OS memory map is as follows:
 | Virtual Memory Address | Purpose  | Size |
 |-|-|-|
 |0xC0000000| The Kernel | 4 Mebibytes |
@@ -67,7 +67,7 @@ In x86, addresses are represented by two different systems: virtual addresses an
 
 These addresses can be set up by writing into something called a "pagetable" which is a data structure used in x86 to represent the mapping of a set of physical addresses to their virtual counterparts. Simply speaking, you can think of a pagetable as a long list of 1024 "pages" in an array structure that has a start address in physical RAM. A "page" is the term used in x86 to refer to a 4KiB block of memory in RAM. Thus a single pagetable holds mappings for a 4MiB area of RAM. This means that the granularity of the virtual address space is 4MiB, or that is that in memory only 4MiB memory areas can be mapped at a time.
 
-Upon booting, Racoon reserves a 4 Kibibyte region of memory to be used as a "master" pagetable, as when paging is enabled, you can only write to RAM that is mapped virtually in a pagetable.
+Upon booting, OS reserves a 4 Kibibyte region of memory to be used as a "master" pagetable, as when paging is enabled, you can only write to RAM that is mapped virtually in a pagetable.
 
 Then, using this "master pagetable", a 4 Mebibyte region can be mapped that can then be used as RAM to store all the other pagetables the operating system could possibly need, as each pagetable being 4KiB in size * 1024 Pagetables is equal to the 4 Gibibytes accessible by a 32-Bit non-PAE architecture, and therefore this memory region is enough for all pagetable mappings.
 
@@ -140,7 +140,7 @@ Upon doing this, you must then load the address of the page directory into the `
 
 To calculate what index we need to write to, we can perform the following arithmetic operation: `address / 2^22`. So for example, if we wanted to map a pagetable to address 0xC0000000, we would write the pagetable's address to index 768 of the page directory.
 
-_**How does Racoon do this internally?**_
+_**How does OS do this internally?**_
 
 Now after the brief introduction to pagetables in x86, we can finally discuss how this is done internally in the operating system.
 
@@ -210,7 +210,7 @@ This algorithm offers the following constraints:
 
 _**Heap Metadata Corruption Detection**_
 
-The allocator provided with Racoon does have a level of security provided through a checksum that is stored in the upper 24 bits of the `in_use` variable.
+The allocator provided with OS does have a level of security provided through a checksum that is stored in the upper 24 bits of the `in_use` variable.
 
 Whenever a heap operation is performed on a heap chunk, its checksum is tested by calculating the checksum of the heap chunk in its current state and testing for equality against the stored heap chunk. If the heap chunk's calculated checksum does not match its stored checksum, then an error is raised. This does however come with the downside that whenever an operation is performed on a heap chunk that mutates it in any way, its checksum must be recalculated.
 

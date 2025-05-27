@@ -112,7 +112,9 @@ void kernel_main(unsigned int boot_page_2, unsigned int ebx) {
 
     kernel_check_minimum_requirements();
 
+    printf("Type something!\n");
     shell_load();
+
     //while (1) {}
 
     //process_spawn(f);
